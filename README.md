@@ -107,7 +107,13 @@ them as **userplugins**, built from source:
 5. Restart Discord → Settings → **Plugins** → enable **Ghost** and open its settings.
 
 To update, replace the `ghost` folder, then `pnpm build` again. You only need
-`pnpm inject` once. After a `git pull` of Vencord, also `pnpm build` again.
+`pnpm inject` once. After a `git pull` of Vencord, also `pnpm build` again. Keep the
+Vencord folder where it is: Discord runs Vencord from it. If a Discord update removes
+Vencord, run `pnpm inject` again.
+
+With a clone of this repo next to your Vencord folder, `npm run deploy`,
+`npm run vencord:update` and `npm run vencord:inject` do these steps for you (see
+[DEVELOPMENT.md](DEVELOPMENT.md)).
 
 **Equicord** (an easier route is coming): Ghost is meant to be submitted to
 [Equicord](https://github.com/Equicord/Equicord), a Vencord fork that ships community
