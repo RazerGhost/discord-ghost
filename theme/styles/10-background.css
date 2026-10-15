@@ -1,0 +1,76 @@
+/* --- Background -----------------------------------------------------------
+   One blurred image behind the whole app; the panels are translucent so it
+   shows through. Never backdrop-filter on the panels: that would re-blur what's
+   behind every panel on every redrawn frame (typing, scrolling, hovering).
+
+   Theme only: #app-mount::before, with a CSS filter. That's one blur on one
+   layer — it stays put, so Chromium keeps the result — but it is redone when
+   the window resizes. Pre-blurred images can use --ghost-blur: 0px.
+
+   With the plugin: <html>'s own background, an image the plugin has blurred
+   ONCE per cover (--ghost-art; no CSS filter at all). The root background is
+   painted with the page and needs no layer of its own behind Discord's. */
+
+html,
+body,
+#app-mount {
+  background: var(--ghost-bg-color) !important;
+}
+
+/* Own stacking context, so the z-index: -1 layer below stays above
+   #app-mount's own background instead of dropping behind <body>. */
+#app-mount {
+  isolation: isolate;
+}
+
+#app-mount::before {
+  content: "";
+  position: fixed;
+  /* overscan by 2× the blur so the edges don't fade to the background colour */
+  inset: calc(var(--ghost-blur) * -2);
+  z-index: -1;
+  pointer-events: none;
+  background: var(--ghost-bg-image) center / cover no-repeat;
+  filter: blur(var(--ghost-blur)) brightness(var(--ghost-brightness)) saturate(var(--ghost-saturation));
+}
+
+/* --- Plugin ---------------------------------------------------------------- */
+
+html.ghost-plugin #app-mount::before {
+  display: none;
+}
+
+/* Everything above <html> is see-through; <html> paints the baked cover over
+   the background colour. Covers crossfade through the background-image
+   transition (Chromium cross-fades images). */
+html.ghost-plugin :is(body, #app-mount) {
+  background: transparent !important;
+}
+
+html.ghost-plugin {
+  background:
+    var(--ghost-art, none) center / cover no-repeat fixed,
+    var(--ghost-bg-color) !important;
+  transition: background-image var(--ghost-fade) ease;
+}
+
+/* Film grain: a tiny SVG noise tile as one more background layer on <html>,
+   blended over the cover. */
+html.ghost-plugin.ghost-grain {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E") repeat fixed,
+    var(--ghost-art, none) center / cover no-repeat fixed,
+    var(--ghost-bg-color) !important;
+  background-blend-mode: overlay, normal, normal;
+}
+
+/* Custom image the plugin couldn't bake (served without CORS): its own layer
+   with a live filter, the only case that needs one. */
+#ghost-bg {
+  position: fixed;
+  inset: calc(var(--ghost-blur) * -2);
+  z-index: -1;
+  pointer-events: none;
+  background: var(--ghost-art) center / cover no-repeat;
+  filter: blur(var(--ghost-blur)) brightness(var(--ghost-brightness)) saturate(var(--ghost-saturation));
+}

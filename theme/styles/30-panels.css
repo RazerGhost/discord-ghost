@@ -1,0 +1,149 @@
+/* --- Panels ---------------------------------------------------------------
+   Server list, channel list and the page (chat, DMs, friends, forums…) become
+   separate rounded glass panels with a gap between them; the member list is a
+   lighter layer inside the chat panel; the user panel floats at the bottom.
+
+   Hooks, best first: Discord's variables (20-surfaces.css, and the
+   --custom-* layout variables below) → data-list-id / role / aria → class-name
+   prefixes. Discord's classes are "name_hash" or "name__hash" (both exist in
+   2025 builds), and the hash changes between builds, so classes are only ever
+   matched by their prefix: [class^="sidebarList_"] matches sidebarList__5e434.
+   ^= assumes Discord puts the base class first, which its CSS modules do.
+   Short prefixes (page_, sidebar_, chat_) exist in other modules too, so they
+   are always anchored to their parent in the layout below.
+
+   Layout as of the visual refresh (Discord's CSS, 2025):
+     [class^="base_"]          grid: titleBar / guildsList · channelsList · page
+       [class^="bar_"]         title bar
+       [class^="content_"]
+         [class^="sidebar_"]   guild list + channel list (+ user panel over both)
+           nav ⊃ [data-list-id="guildsnav"]    server list
+           [class^="sidebarList_"]              channel list / DM list
+           section[class^="panels_"]            user panel (position: absolute)
+         [class^="page_"]      chat | friends | forum | …
+           [class^="chat_"] ⊃ section[class^="title_"] (header) ·
+                               [class^="chatContent_"] · [class^="membersWrap_"]
+
+   Channel list and page: the gap is a transparent border with background-clip,
+   not margins (they're fixed-width grid items; margins would push them out of
+   their tracks). The page has no left border, since the channel list's right
+   border already spaces them, and the title bar above spaces the top. Each
+   corner's radius is the inner --ghost-radius plus the border on that side
+   (per axis), so the inside corner is a clean circle.
+
+   Server list: Discord sizes its items, folder backgrounds and unread badges
+   from --custom-guild-list-width and its padding, so the column keeps
+   Discord's width and no border; the glass is a ::before inset by half the
+   gap on each side. */
+
+:is([class^="sidebar_"] > [class^="sidebarList_"], [class^="content_"] > [class^="page_"]) {
+  --ghost-edge-top: 0px;
+  --ghost-edge-left: 0px;
+  --ghost-edge-right: var(--ghost-gap);
+  --ghost-edge-bottom: var(--ghost-gap);
+  background: var(--ghost-panel) padding-box !important;
+  border-style: solid !important;
+  border-color: transparent !important;
+  border-width: var(--ghost-edge-top) var(--ghost-edge-right) var(--ghost-edge-bottom) var(--ghost-edge-left) !important;
+  border-radius:
+    calc(var(--ghost-radius) + var(--ghost-edge-left)) calc(var(--ghost-radius) + var(--ghost-edge-right))
+    calc(var(--ghost-radius) + var(--ghost-edge-right)) calc(var(--ghost-radius) + var(--ghost-edge-left)) /
+    calc(var(--ghost-radius) + var(--ghost-edge-top)) calc(var(--ghost-radius) + var(--ghost-edge-top))
+    calc(var(--ghost-radius) + var(--ghost-edge-bottom)) calc(var(--ghost-radius) + var(--ghost-edge-bottom)) !important;
+  box-shadow: inset 0 0 0 1px var(--ghost-border);
+  overflow: hidden;
+}
+
+/* The server list sits half a gap from the channel list: give that the other half. */
+[class^="sidebar_"] > [class^="sidebarList_"] {
+  --ghost-edge-left: calc(var(--ghost-gap) / 2);
+}
+
+/* Server list. isolation keeps the z-index: -1 glass above the app's
+   background but behind the icons. Discord's bottom fade mask (for the user
+   panel over it) would cut the glass off; drop it. */
+:is(nav:has([data-list-id="guildsnav"]), [class^="sidebar_"] > nav) {
+  isolation: isolate;
+  background: transparent !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  margin-bottom: 0 !important;
+}
+
+:is(nav:has([data-list-id="guildsnav"]), [class^="sidebar_"] > nav)::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc(var(--ghost-gap) / 2) var(--ghost-gap);
+  z-index: -1;
+  background: var(--ghost-panel);
+  border-radius: var(--ghost-radius);
+  box-shadow: inset 0 0 0 1px var(--ghost-border);
+  pointer-events: none;
+}
+
+/* Strip Discord's own frame lines and corner shapes inside the panels. */
+[class^="content_"] > [class^="page_"] :is([class^="chat_"], [class^="chatContent_"]),
+[class^="sidebar_"] > [class^="sidebarList_"] [class^="privateChannels_"] {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Hides a strip Discord draws at the bottom of the sidebar, under the user panel. */
+[class^="content_"] > [class^="sidebar_"]::after {
+  display: none !important;
+}
+
+/* --- User panel --------------------------------------------------------------
+   Already a floating card in the refresh; line it up with the panels' gap
+   (Discord's own --custom-panels-spacing) and make it glass. */
+[class^="sidebar_"] section[class^="panels_"] {
+  --custom-panels-spacing: var(--ghost-gap);
+  background: var(--ghost-solid) !important;
+  border: none !important;
+  border-radius: var(--ghost-radius) !important;
+  box-shadow: inset 0 0 0 1px var(--ghost-border), 0 8px 24px rgb(0 0 0 / 0.25);
+}
+
+/* --- Chat header and member list ---------------------------------------------- */
+
+/* Header bar: transparent, with one line under it. --__header-bar-background
+   is Discord's variable for it (also used for the fade behind long topics). */
+[class^="content_"] > [class^="page_"] section[class^="title_"] {
+  --__header-bar-background: transparent;
+  background: transparent !important;
+  box-shadow: inset 0 -1px 0 var(--ghost-border) !important;
+  border: none !important;
+}
+
+[class^="membersWrap_"] [class^="members_"] {
+  background: transparent !important;
+}
+
+[class^="membersWrap_"] {
+  background: var(--ghost-inset) !important;
+  box-shadow: inset 1px 0 0 var(--ghost-border);
+}
+
+/* Message box: --channeltextarea-background (20-surfaces.css) colours it. */
+[class^="channelTextArea_"] {
+  border-radius: var(--ghost-radius) !important;
+  box-shadow: inset 0 0 0 1px var(--ghost-border);
+}
+
+/* --- Full-window layers ------------------------------------------------------
+   User/server settings open as a second layer over the app. With transparent
+   base colours they'd show the app through; give them solid glass. The base
+   layer (the app itself) stays transparent. */
+[class^="layers_"] > [class^="layer_"]:not([class*="baseLayer_"]) {
+  background: var(--ghost-solid) !important;
+}
+
+/* --- Notices -----------------------------------------------------------------
+   The bar across the top ("You were in a voice channel…", update notices) sits
+   in the layout grid's notice row, above the channel list and page. Inset and
+   round it like a panel instead of running edge to edge. */
+:is([class^="base_"], [class^="content_"]) > [class^="notice_"] {
+  margin: 0 var(--ghost-gap) var(--ghost-gap) 0;
+  border-radius: var(--ghost-radius);
+}

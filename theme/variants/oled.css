@@ -1,0 +1,8 @@
+/* OLED variant: declarations only — build.mjs wraps them as html.ghost-oled
+   (plugin) and :root:root (dist/ghost-oled.theme.css). Pure black panels over a
+   darker background; popouts and settings black too. */
+--ghost-surface: #000;
+--ghost-bg-color: #000;
+--ghost-brightness: 0.3;
+--ghost-panel-alpha: 0.55;
+--ghost-border-alpha: 0.08;

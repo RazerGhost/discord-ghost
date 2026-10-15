@@ -1,0 +1,49 @@
+/* --- Accent -----------------------------------------------------------------
+   Discord's blurple, replaced by --ghost-accent (the plugin sets it from the
+   album art). Buttons, toggles, links, mentions of you, unread pills and the
+   selected-server pill all read these brand/control variables.
+   Specificity as in 20-surfaces.css, so this wins over Discord's own blocks;
+   html.ghost-accent-off (plugin: "Discord's" accent) turns it all off.
+   Discord's --brand-*-hsl twins are left alone: CSS can't turn a colour back
+   into hsl channels, so the few translucent brand washes stay blurple. */
+
+html:not(.ghost-accent-off),
+html:not(.ghost-accent-off) :is(.theme-dark, .theme-darker, .theme-midnight, .theme-light, .visual-refresh) {
+  --brand-500: var(--ghost-accent);
+  --brand-530: color-mix(in oklab, var(--ghost-accent), black 8%);
+  --brand-560: color-mix(in oklab, var(--ghost-accent), black 15%);
+  --brand-600: color-mix(in oklab, var(--ghost-accent), black 22%);
+  --brand-460: color-mix(in oklab, var(--ghost-accent), white 8%);
+  --brand-430: color-mix(in oklab, var(--ghost-accent), white 12%);
+  --brand-400: color-mix(in oklab, var(--ghost-accent), white 18%);
+  --brand-360: color-mix(in oklab, var(--ghost-accent), white 30%);
+  --brand-330: color-mix(in oklab, var(--ghost-accent), white 40%);
+  --brand-300: color-mix(in oklab, var(--ghost-accent), white 50%);
+  --brand-260: color-mix(in oklab, var(--ghost-accent), white 60%);
+  --brand-230: color-mix(in oklab, var(--ghost-accent), white 70%);
+  --brand-200: color-mix(in oklab, var(--ghost-accent), white 78%);
+
+  --background-brand: var(--ghost-accent);
+  --text-brand: var(--brand-360);
+  --icon-brand: var(--brand-360);
+  --text-link: var(--brand-360);
+  --control-brand-foreground: var(--brand-360);
+  --control-brand-foreground-new: var(--brand-360);
+  --control-primary-background-default: var(--ghost-accent);
+  --control-primary-background-hover: var(--brand-560);
+  --control-primary-background-active: var(--brand-600);
+  --control-primary-text-default: var(--ghost-on-accent);
+  --control-primary-text-hover: var(--ghost-on-accent);
+  --control-primary-text-active: var(--ghost-on-accent);
+  --control-primary-icon-default: var(--ghost-on-accent);
+  --control-primary-icon-hover: var(--ghost-on-accent);
+  --control-primary-icon-active: var(--ghost-on-accent);
+  --checkbox-background-selected-default: var(--ghost-accent);
+  --checkbox-background-selected-hover: var(--brand-560);
+  --badge-primary-background: var(--ghost-accent);
+}
+
+/* Text selection in the accent. */
+::selection {
+  background: rgb(from var(--ghost-accent) r g b / 0.35);
+}

@@ -1,0 +1,59 @@
+/* ==========================================================================
+   Ghost for Discord — lightweight glassy theme
+   Every tunable is a --ghost-* variable. Override them in QuickCSS
+   (:root { --ghost-blur: 32px; }), or let the Ghost Vencord plugin set them
+   (inline style on <html>, which wins over both).
+   ========================================================================== */
+
+:root {
+  /* Background */
+  --ghost-bg-image: none; /* url("https://…"); none = just --ghost-bg-color */
+  --ghost-bg-color: #0b0b0f;
+  --ghost-blur: 96px;
+  --ghost-brightness: 0.35;
+  --ghost-saturation: 1.1;
+  --ghost-fade: 900ms; /* crossfade between album covers (plugin) */
+
+  /* Glass */
+  --ghost-surface: #121216; /* panel colour before transparency; OLED: #000 */
+  --ghost-panel-alpha: 0.5;
+  --ghost-border-alpha: 0.06;
+  --ghost-radius: 12px;
+  --ghost-gap: 8px;
+
+  /* Colour */
+  --ghost-accent: #b9a4ff;
+  --ghost-tint: 0%; /* how much accent is mixed into the panels */
+
+  /* Derived — not meant to be set directly. Relative colour syntax, so the
+     panels follow the accent tint. */
+  --ghost-surface-tinted: color-mix(in oklab, var(--ghost-surface), var(--ghost-accent) var(--ghost-tint));
+  --ghost-panel: rgb(from var(--ghost-surface-tinted) r g b / var(--ghost-panel-alpha));
+  /* Panels inside panels (member list, message box): a second, lighter layer. */
+  --ghost-inset: rgb(from var(--ghost-surface-tinted) r g b / calc(var(--ghost-panel-alpha) * 0.6));
+  /* Modals (settings), popouts and menus: fully opaque. They sit over other
+     UI, not the background, and see-through windows only hurt reading. */
+  --ghost-solid: var(--ghost-surface-tinted);
+  --ghost-border: rgb(255 255 255 / var(--ghost-border-alpha));
+  /* Black or white, whichever reads better on the accent (l is OKLCH lightness). */
+  --ghost-on-accent: oklch(from var(--ghost-accent) clamp(0, (0.72 - l) * 1000, 1) 0 0);
+}
+
+/* Register the derived colours as real <color> properties. Unregistered, they
+   stay token streams and Chromium re-resolves the mix for every element that
+   uses them; registered, it's computed once on <html> and inherited as a colour. */
+@property --ghost-surface-tinted { syntax: "<color>"; inherits: true; initial-value: #121216; }
+@property --ghost-panel { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --ghost-inset { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --ghost-solid { syntax: "<color>"; inherits: true; initial-value: #121216; }
+@property --ghost-border { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --ghost-on-accent { syntax: "<color>"; inherits: true; initial-value: #000; }
+
+/* Light theme: light glass instead of dark, so Discord's dark text stays readable. */
+html.theme-light {
+  --ghost-surface: #f4f4f7;
+  --ghost-bg-color: #d8d8de;
+  --ghost-brightness: 1.05;
+  --ghost-panel-alpha: 0.55;
+  --ghost-border: rgb(0 0 0 / var(--ghost-border-alpha));
+}

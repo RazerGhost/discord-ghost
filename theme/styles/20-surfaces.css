@@ -1,0 +1,77 @@
+/* --- Discord's surface variables -------------------------------------------
+   First hook: Discord's own variables (2025 visual refresh). The app frame,
+   sidebars, chat and member list all paint --background-base-low/-lower/-lowest
+   (or --background-gradient-*, which fall back to those when no Nitro client
+   theme is active).
+
+   Two scopes:
+   - Everywhere (modals such as settings, popouts, menus): the Ghost surface
+     colour, fully opaque. Nothing needs to show through those, and text in
+     them should read as on any solid window.
+   - Inside the app's base layer only: transparent, so the background shows
+     through and the panels in 30-panels.css add the glass. Modals and popouts
+     are rendered outside the base layer, so they keep the opaque colours.
+
+   Discord defines these in .theme-dark / .theme-darker / .theme-midnight /
+   .theme-light — on <html> and again on popout roots — and once more inside
+   @supports blocks. `html:is(…)` / `html :is(…)` / `html [class*=…]` are
+   (0,1,1) and up, so they win whichever order the stylesheets load in. */
+
+html:is(.theme-dark, .theme-darker, .theme-midnight, .theme-light),
+html :is(.theme-dark, .theme-darker, .theme-midnight, .theme-light) {
+  --background-base-lowest: var(--ghost-solid);
+  --background-base-lower: var(--ghost-solid);
+  --background-base-low: color-mix(in oklab, var(--ghost-solid), white 2%);
+  --app-frame-background: var(--ghost-solid);
+  --chat-background-default: var(--ghost-solid);
+  --panel-bg: var(--ghost-solid);
+  --modal-background: var(--ghost-solid);
+  --background-surface-high: color-mix(in oklab, var(--ghost-solid), white 3%);
+  --background-surface-higher: color-mix(in oklab, var(--ghost-solid), white 5%);
+  --background-surface-highest: color-mix(in oklab, var(--ghost-solid), white 8%);
+  /* Lighter layers inside a panel or window: the message box, cards. */
+  --channeltextarea-background: var(--ghost-inset);
+  --card-background-default: var(--ghost-inset);
+  --border-subtle: var(--ghost-border);
+}
+
+/* The light theme's text is dark: lighter layers there are darker, not lighter. */
+html.theme-light,
+html .theme-light {
+  --background-base-low: color-mix(in oklab, var(--ghost-solid), black 2%);
+  --background-surface-high: color-mix(in oklab, var(--ghost-solid), black 3%);
+  --background-surface-higher: color-mix(in oklab, var(--ghost-solid), black 5%);
+  --background-surface-highest: color-mix(in oklab, var(--ghost-solid), black 8%);
+}
+
+/* The app itself (server list, channels, chat): see-through. */
+html [class*="baseLayer_"],
+html [class*="baseLayer_"] :is(.theme-dark, .theme-darker, .theme-midnight, .theme-light) {
+  --background-base-lowest: transparent;
+  --background-base-lower: transparent;
+  --background-base-low: transparent;
+  --app-frame-background: transparent;
+  --app-frame-border: transparent;
+  --chat-background-default: transparent;
+  --panel-bg: transparent;
+  --home-background: transparent;
+  --custom-channel-members-bg: transparent;
+}
+
+/* The app frame around the base layer paints --background-base-lowest, which
+   is opaque outside the base layer — clear it directly. bg_ is an empty
+   decorative layer; :empty keeps the short prefix from matching anything else. */
+#app-mount :is([class^="app_"], [class^="layers_"], [class^="bg_"]:empty) {
+  background: transparent !important;
+}
+
+/* Dialogs (settings, profiles, confirmations) stay opaque even if Discord
+   renders one inside the base layer: role="dialog" sets the colours back on
+   the dialog itself, which beats what it would inherit. */
+html [role="dialog"] {
+  --background-base-lowest: var(--ghost-solid);
+  --background-base-lower: var(--ghost-solid);
+  --background-base-low: color-mix(in oklab, var(--ghost-solid), white 2%);
+  --chat-background-default: var(--ghost-solid);
+  --panel-bg: var(--ghost-solid);
+}
