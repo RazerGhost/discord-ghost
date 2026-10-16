@@ -100,11 +100,16 @@
 }
 
 /* --- User panel --------------------------------------------------------------
-   Already a floating card in the refresh; line it up with the panels' gap
-   (Discord's own --custom-panels-spacing). Solid, not glass: it overlaps the
-   channel list, and its name and status must read over any cover. */
+   Already a floating card in the refresh, under both lists (which end a gap
+   above it). Its edges line up with theirs: left with the server list's glass
+   (half a gap in), right with the channel list's (a gap in), bottom with the
+   page's. Solid, not glass, so its name and status read over any cover. */
 [class^="sidebar_"] section[class^="panels_"] {
   --custom-panels-spacing: var(--ghost-gap);
+  left: calc(var(--ghost-gap) / 2) !important;
+  right: var(--ghost-gap) !important;
+  bottom: var(--ghost-gap) !important;
+  width: auto !important;
   background: var(--ghost-solid) !important;
   border: none !important;
   border-radius: var(--ghost-radius) !important;
