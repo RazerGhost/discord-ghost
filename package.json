@@ -1,6 +1,6 @@
 {
   "name": "discord-ghost",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "A lightweight glassy Discord theme: blurred background, translucent rounded panels. Pairs with the Ghost Vencord plugin for album-art backgrounds from Spotify.",
   "type": "module",
@@ -8,6 +8,7 @@
     "build": "node build.mjs",
     "dev": "node build.mjs --dev",
     "check": "node scripts/check.mjs",
+    "check:discord": "node build.mjs && node scripts/selectors.mjs",
     "deploy": "node scripts/vencord.mjs deploy",
     "dev:discord": "node scripts/vencord.mjs watch",
     "vencord:update": "node scripts/vencord.mjs update",

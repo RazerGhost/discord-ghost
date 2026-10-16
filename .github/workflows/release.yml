@@ -38,7 +38,7 @@ jobs:
       - name: Check out Vencord
         run: git clone --depth 1 https://github.com/Vendicated/Vencord.git ../Vencord
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           package_json_file: ../Vencord/package.json
 
@@ -77,12 +77,14 @@ jobs:
           force_orphan: true
 
       # raw.githubusercontent.com (the documented URL) caches ~5 min on its own;
-      # this refreshes the jsDelivr alternative. jsDelivr throttles purges after
-      # several pushes in a row — harmless, so it mustn't fail the release.
+      # this refreshes the jsDelivr alternative, through its purge API directly
+      # (the purge actions still run on the deprecated Node 20). jsDelivr
+      # throttles purges after several pushes in a row — harmless, so it
+      # mustn't fail the release.
       - name: Purge jsDelivr cache
         continue-on-error: true
-        uses: egad13/purge-jsdelivr-cache@v1
-        with:
-          url: |
-            https://cdn.jsdelivr.net/gh/${{ github.repository }}@dist/ghost.theme.css
-            https://cdn.jsdelivr.net/gh/${{ github.repository }}@dist/ghost-oled.theme.css
+        run: |
+          for file in ghost.theme.css ghost-oled.theme.css; do
+            curl -fsS "https://purge.jsdelivr.net/gh/${{ github.repository }}@dist/$file"
+            echo
+          done
