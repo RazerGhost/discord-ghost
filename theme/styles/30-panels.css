@@ -54,20 +54,25 @@
   overflow: hidden;
 }
 
-/* The server list sits half a gap from the channel list: give that the other half. */
+/* The server list sits half a gap from the channel list: give that the other
+   half. The bottom edge leaves room for the user panel, which Discord floats
+   over the bottom of both lists: the panel's height (Discord's
+   --custom-app-panels-height) plus a gap on each side of it. */
 [class^="sidebar_"] > [class^="sidebarList_"] {
   --ghost-edge-left: calc(var(--ghost-gap) / 2);
+  --ghost-edge-bottom: calc(var(--custom-app-panels-height, 56px) + var(--ghost-gap) * 2);
 }
 
 /* Server list. isolation keeps the z-index: -1 glass above the app's
-   background but behind the icons. Discord's bottom fade mask (for the user
-   panel over it) would cut the glass off; drop it. */
+   background but behind the icons. Discord lets the list run 16px under the
+   user panel and fades it out with a mask; instead it ends a gap above the
+   panel (the margin, plus the glass's own bottom inset), so no mask. */
 :is(nav:has([data-list-id="guildsnav"]), [class^="sidebar_"] > nav) {
   isolation: isolate;
   background: transparent !important;
   -webkit-mask: none !important;
   mask: none !important;
-  margin-bottom: 0 !important;
+  margin-bottom: calc(var(--custom-app-panels-height, 56px) + var(--ghost-gap)) !important;
 }
 
 :is(nav:has([data-list-id="guildsnav"]), [class^="sidebar_"] > nav)::before {
