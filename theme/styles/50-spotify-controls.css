@@ -1,0 +1,51 @@
+/* --- SpotifyControls (Vencord / Equicord plugin) -----------------------------
+   The player it adds sits inside the user panel, above the account row. It
+   brings its own dark background, top corners and divider; here it becomes
+   part of the panel instead: no background of its own, Ghost's border as the
+   divider, the panels' radius on the cover, and the accent for progress and
+   the shuffle/repeat states (Spotify green when the accent is Discord's).
+   Its ids and vc- classes are the plugin's own, stable across Discord builds. */
+
+#vc-spotify-player {
+  background: transparent !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--ghost-border) !important;
+  padding: 12px 12px 8px;
+}
+
+html:not(.ghost-accent-off) #vc-spotify-player {
+  --vc-spotify-green: var(--ghost-accent);
+}
+
+#vc-spotify-album-image {
+  border-radius: max(4px, var(--ghost-radius) / 2) !important;
+}
+
+/* Progress: the played part in the accent, always (the plugin only colours it
+   on hover), on a track in Ghost's border colour. Discord's slider now sits
+   two levels deeper than the plugin's own `> [class*="slider"]` expects, so
+   its rules miss and Discord's blurple shows; these match at any depth. */
+#vc-spotify-progress-bar [class^="slider_"] [class^="bar_"] {
+  background-color: var(--ghost-border) !important;
+  border-radius: 999px;
+}
+
+#vc-spotify-progress-bar [class^="slider_"] [class^="barFill_"] {
+  background-color: var(--vc-spotify-green) !important;
+}
+
+/* The knob only while hovering, as the plugin intends. */
+#vc-spotify-progress-bar [class^="slider_"] [class^="grabber_"] {
+  background-color: var(--vc-spotify-green) !important;
+  border-color: transparent !important;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+#vc-spotify-progress-bar:hover [class^="slider_"] [class^="grabber_"] {
+  opacity: 1;
+}
+
+.vc-spotify-button {
+  border-radius: max(4px, var(--ghost-radius) / 2);
+}

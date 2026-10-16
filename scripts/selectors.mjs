@@ -75,7 +75,8 @@ function hooks(css) {
     const vars = new Set(
         [...css.matchAll(/(--[\w-]+)\s*:|var\((--[\w-]+)/g)]
             .map(m => m[1] ?? m[2])
-            .filter(v => !v.startsWith("--ghost-") && !v.startsWith("--__"))
+            // --vc-*: Vencord plugins' own variables (SpotifyControls), not Discord's.
+            .filter(v => !v.startsWith("--ghost-") && !v.startsWith("--__") && !v.startsWith("--vc-"))
     );
     return { prefixes, vars };
 }

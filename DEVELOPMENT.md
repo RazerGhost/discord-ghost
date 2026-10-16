@@ -121,6 +121,7 @@ selectors go stale. So:
 | `theme/styles/20-surfaces.css` | Discord's surface variables: transparent app, Ghost-coloured popouts; server and Nitro colour themes switched off. |
 | `theme/styles/30-panels.css` | The glass panels and the layout map of Discord's DOM. |
 | `theme/styles/40-activity.css` | Activity cards ("Listening to Spotify", games): inset glass, accent progress bar. |
+| `theme/styles/50-spotify-controls.css` | Vencord's SpotifyControls player, folded into the user panel. |
 | `theme/styles/90-accent.css` | Discord's brand variables → `--ghost-accent`. |
 | `theme/variants/*.css` | Declarations only, used as `html.ghost-<name>` (plugin) and `ghost-<name>.theme.css`; dark themes only (`:not(.theme-light)`). |
 | `plugin/ghost/index.tsx` | Vencord plugin definition: start/stop, injects `ghost.css`. |

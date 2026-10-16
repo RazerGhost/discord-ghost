@@ -21,7 +21,7 @@ It comes in two parts:
   glass panels, with the user panel (solid, so it always reads) lined up below the
   lists. The member list is a card of its own inside the chat. Menus, popouts and
   "Listening to Spotify" cards share the panels' look, with the progress bar in
-  your accent.
+  your accent. Vencord's SpotifyControls player becomes part of the user panel.
 - **Accent**: Discord's blurple is replaced everywhere (buttons, links, toggles,
   mentions, reactions, highlights) by a colour you pick. With the plugin it can
   follow the album art or the current server's theme instead, if you want that.
