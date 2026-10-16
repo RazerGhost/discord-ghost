@@ -4,8 +4,10 @@
    selected-server pill all read these brand/control variables.
    Specificity as in 20-surfaces.css, so this wins over Discord's own blocks;
    html.ghost-accent-off (plugin: "Discord's" accent) turns it all off.
-   Discord's --brand-*-hsl twins are left alone: CSS can't turn a colour back
-   into hsl channels, so the few translucent brand washes stay blurple. */
+   Discord's --brand-*-hsl / --opacity-blurple-*-hsl twins can't be derived
+   (CSS can't turn a colour back into hsl channels), so the translucent washes
+   built from them — mentions, reactions, highlights, code — are replaced one
+   variable at a time, at Discord's own dark-theme strengths. */
 
 html:not(.ghost-accent-off),
 html:not(.ghost-accent-off) :is(.theme-dark, .theme-darker, .theme-midnight, .theme-light, .visual-refresh) {
@@ -41,6 +43,25 @@ html:not(.ghost-accent-off) :is(.theme-dark, .theme-darker, .theme-midnight, .th
   --checkbox-background-selected-default: var(--ghost-accent);
   --checkbox-background-selected-hover: var(--brand-560);
   --badge-primary-background: var(--ghost-accent);
+
+  --border-focus: var(--brand-360);
+  --mention-background: rgb(from var(--ghost-accent) r g b / 0.24);
+  --message-highlight-background-default: rgb(from var(--ghost-accent) r g b / 0.16);
+  --message-highlight-background-hover: rgb(from var(--ghost-accent) r g b / 0.12);
+  --reaction-background-reacted-default: rgb(from var(--ghost-accent) r g b / 0.24);
+  --reaction-background-reacted-hover: rgb(from var(--ghost-accent) r g b / 0.32);
+  --reaction-border-reacted-default: var(--ghost-accent);
+  --togglebutton-background-selected: rgb(from var(--ghost-accent) r g b / 0.16);
+  --togglebutton-background-selected-hover: rgb(from var(--ghost-accent) r g b / 0.24);
+  --togglebutton-border-selected: var(--ghost-accent);
+  --togglebutton-border-active: rgb(from var(--ghost-accent) r g b / 0.84);
+  --background-code: rgb(from var(--ghost-accent) r g b / 0.08);
+  --polls-voted-fill: rgb(from var(--ghost-accent) r g b / 0.2);
+}
+
+/* The file-drop overlay paints a literal blurple, no variable. */
+html:not(.ghost-accent-off) [class^="uploadDropModal_"] [class^="bgScale_"] {
+  background-color: var(--ghost-accent) !important;
 }
 
 /* Text selection in the accent. */

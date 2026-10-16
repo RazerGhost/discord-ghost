@@ -70,7 +70,8 @@ Open DevTools in Discord with Ctrl+Shift+I (Vencord enables it).
   shows any Ghost variable as Discord sees it.
 - With the plugin running, `<html>` has the class `ghost-plugin` (re-added if
   Discord rewrites `<html>`'s classes), plus `ghost-oled`,
-  `ghost-grain` and `ghost-accent-off` when those are on. The settings, baked cover and accent are
+  `ghost-grain`, `ghost-bg-solid` (source "Solid colour": the colour isn't dimmed) and
+  `ghost-accent-off` when those are on. The settings, baked cover and accent are
   `--ghost-*` variables in `<style id="ghost-vars">` (not `<html>`'s inline style,
   which Discord rewrites).
 - The baked cover is `--ghost-art` (a small `data:` image, about 1/8
@@ -116,7 +117,7 @@ selectors go stale. So:
 | `theme/styles/*.css` | The look, one file per area, joined in file-name order. |
 | `theme/styles/00-base.css` | `--ghost-*` variables and their derived colours. |
 | `theme/styles/10-background.css` | The blurred background (theme `::before`, plugin `#ghost-bg`). |
-| `theme/styles/20-surfaces.css` | Discord's surface variables: transparent app, Ghost-coloured popouts. |
+| `theme/styles/20-surfaces.css` | Discord's surface variables: transparent app, Ghost-coloured popouts; server and Nitro colour themes switched off. |
 | `theme/styles/30-panels.css` | The glass panels and the layout map of Discord's DOM. |
 | `theme/styles/90-accent.css` | Discord's brand variables → `--ghost-accent`. |
 | `theme/variants/*.css` | Declarations only, used as `html.ghost-<name>` (plugin) and `ghost-<name>.theme.css`. |

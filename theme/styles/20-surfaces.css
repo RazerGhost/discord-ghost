@@ -75,3 +75,27 @@ html [role="dialog"] {
   --chat-background-default: var(--ghost-solid);
   --panel-bg: var(--ghost-solid);
 }
+
+/* Server themes (a boost perk) and Nitro colour themes: Discord adds
+   .custom-theme-background / .custom-client-theme to <html> and mixes the
+   theme's colours into nearly every colour variable — up to 88% into
+   surfaces, scrollbars and borders, ~30% into text — and paints chat and
+   sidebars with --background-gradient-*. Ghost's colours are the user's, so
+   the mix amounts go to 0% (as Discord's own .disable-adaptive-theme does), and
+   the gradient variables to `initial`, which makes Discord's
+   var(--background-gradient-*, fallback) take its fallback: Ghost's surfaces. */
+html:is(.custom-theme-background, .custom-client-theme),
+html :is(.custom-theme-background, .custom-client-theme) {
+  --custom-theme-base-color-amount: 0% !important;
+  --custom-theme-text-color-amount: 0% !important;
+  --custom-theme-border-color-amount: 0% !important;
+  --background-gradient-chat: initial;
+  --background-gradient-chat-preview: initial;
+  --background-gradient-app-frame: initial;
+  --background-gradient-lowest: initial;
+  --background-gradient-lower: initial;
+  --background-gradient-low: initial;
+  --background-gradient-high: initial;
+  --background-gradient-higher: initial;
+  --background-gradient-highest: initial;
+}

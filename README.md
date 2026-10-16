@@ -45,8 +45,9 @@ Download [`ghost.theme.css`](https://raw.githubusercontent.com/RazerGhost/discor
 into your themes folder (Settings → Themes → **Open Themes Folder**) and enable it.
 A downloaded file doesn't update itself.
 
-Use Discord's **Dark**, **Darker** or **Midnight** appearance. Turn off Nitro client
-themes, because their gradients paint over the glass.
+Use Discord's **Dark**, **Darker** or **Midnight** appearance. Ghost ignores Nitro
+colour themes and boosted servers' themes, so its colours stay yours everywhere; it
+needs no Nitro itself.
 
 ## Customise the theme
 

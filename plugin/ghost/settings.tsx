@@ -74,7 +74,7 @@ export const settings = definePluginSettings({
     bgColor: {
         type: OptionType.STRING,
         displayName: "Colour",
-        description: "The solid colour, and what shows while an image loads.",
+        description: "The solid colour. With an image, it shows while nothing plays or the image loads, dimmed like the image.",
         default: "#0b0b0f",
         isValid: isHex,
         onChange: changed,
@@ -218,7 +218,7 @@ export function watchSettings(select: (s: Settings) => unknown, onChange: () => 
     return () => void listeners.delete(listener);
 }
 
-const CLASSES = ["ghost-plugin", "ghost-oled", "ghost-grain", "ghost-accent-off"];
+const CLASSES = ["ghost-plugin", "ghost-oled", "ghost-grain", "ghost-bg-solid", "ghost-accent-off"];
 
 export function applySettings() {
     const s = settings.store;
@@ -245,6 +245,7 @@ function wantedClasses() {
         "ghost-plugin": true,
         "ghost-oled": s.variant === "oled",
         "ghost-grain": s.grain && s.bgSource !== "solid",
+        "ghost-bg-solid": s.bgSource === "solid",
         "ghost-accent-off": s.accentSource === "discord",
     };
 }

@@ -47,10 +47,21 @@ html.ghost-plugin :is(body, #app-mount) {
   background: transparent !important;
 }
 
+/* The colour under the cover is what shows while nothing plays, so it gets the
+   cover's brightness: a bright pick would otherwise be a full-strength wall
+   behind all the text. As the chosen source ("Solid colour") it's shown as is. */
+html.ghost-plugin {
+  --ghost-bg-fill: color-mix(in oklab, var(--ghost-bg-color) calc(min(var(--ghost-brightness), 1) * 100%), black);
+}
+
+html.ghost-plugin.ghost-bg-solid {
+  --ghost-bg-fill: var(--ghost-bg-color);
+}
+
 html.ghost-plugin {
   background:
     var(--ghost-art, none) center / cover no-repeat fixed,
-    var(--ghost-bg-color) !important;
+    var(--ghost-bg-fill) !important;
   transition: background-image var(--ghost-fade) ease;
 }
 
@@ -60,7 +71,7 @@ html.ghost-plugin.ghost-grain {
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E") repeat fixed,
     var(--ghost-art, none) center / cover no-repeat fixed,
-    var(--ghost-bg-color) !important;
+    var(--ghost-bg-fill) !important;
   background-blend-mode: overlay, normal, normal;
 }
 
