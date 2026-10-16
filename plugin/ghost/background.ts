@@ -72,8 +72,8 @@ function bake(img: HTMLImageElement, s: Settings): string | null {
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    const blur = s.blur / SCALE;
-    ctx.filter = `blur(${blur}px) brightness(${s.brightness / 100}) saturate(${s.saturation / 100})`;
+    const blur = Math.round(s.blur) / SCALE;
+    ctx.filter = `blur(${blur}px) brightness(${Math.round(s.brightness) / 100}) saturate(${Math.round(s.saturation) / 100})`;
     // "cover" crop, overscanned by 2× the blur so the edges don't fade to transparent.
     const bleed = blur * 2;
     const scale = Math.max((w + bleed * 2) / img.naturalWidth, (h + bleed * 2) / img.naturalHeight);

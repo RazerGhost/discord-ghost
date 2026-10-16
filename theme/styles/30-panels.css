@@ -63,16 +63,27 @@
   --ghost-edge-bottom: calc(var(--custom-app-panels-height, 56px) + var(--ghost-gap) * 2);
 }
 
+/* Discord pads the bottom of the channel list by the panel's height, for the
+   panel over it; the list ends above the panel now, so that would only leave
+   an empty band at the bottom of the glass. */
+[class^="sidebar_"] > [class^="sidebarList_"] > [class^="container_"] {
+  padding-bottom: 0 !important;
+}
+
 /* Server list. isolation keeps the z-index: -1 glass above the app's
    background but behind the icons. Discord lets the list run 16px under the
    user panel and fades it out with a mask; instead it ends a gap above the
-   panel (the margin, plus the glass's own bottom inset), so no mask. */
+   panel (the margin, plus the glass's own bottom inset), so no mask. The
+   padding keeps the icons inside the glass: without it they scroll down past
+   it, into the gap above the user panel. */
 :is(nav:has([data-list-id="guildsnav"]), [class^="sidebar_"] > nav) {
   isolation: isolate;
   background: transparent !important;
   -webkit-mask: none !important;
   mask: none !important;
   margin-bottom: calc(var(--custom-app-panels-height, 56px) + var(--ghost-gap)) !important;
+  padding-bottom: var(--ghost-gap) !important;
+  box-sizing: border-box;
 }
 
 :is(nav:has([data-list-id="guildsnav"]), [class^="sidebar_"] > nav)::before {
@@ -131,9 +142,14 @@
   background: transparent !important;
 }
 
+/* The member list: a card of its own inside the page, a gap in from the
+   page's edges and from the chat, rounded like the message box. */
 [class^="membersWrap_"] {
   background: var(--ghost-inset) !important;
-  box-shadow: inset 1px 0 0 var(--ghost-border);
+  box-shadow: inset 0 0 0 1px var(--ghost-border);
+  border-radius: var(--ghost-radius);
+  margin: var(--ghost-gap) var(--ghost-gap) var(--ghost-gap) 0;
+  overflow: hidden;
 }
 
 /* Message box: --channeltextarea-background (20-surfaces.css) colours it. */
@@ -157,4 +173,17 @@
 :is([class^="base_"], [class^="content_"]) > [class^="notice_"] {
   margin: 0 var(--ghost-gap) var(--ghost-gap) 0;
   border-radius: var(--ghost-radius);
+}
+
+/* --- Menus and popouts ------------------------------------------------------
+   Floating surfaces get the panels' corner radius instead of Discord's 8px.
+   Profile popouts are an outer frame with a 2px border around an inner box;
+   the inner radius is the outer one minus that border. */
+[class^="menu_"][role="menu"],
+[class*="layerContainer_"] [class^="outer_"]:has(> [class^="inner_"]) {
+  border-radius: var(--ghost-radius) !important;
+}
+
+[class*="layerContainer_"] [class^="outer_"] > [class^="inner_"] {
+  border-radius: max(0px, var(--ghost-radius) - 2px) !important;
 }

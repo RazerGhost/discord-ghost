@@ -5,8 +5,10 @@
 //   dist/README.md, LICENSE    so the dist branch explains itself
 // The theme is theme/styles/*.css joined in file-name order (00-…, 10-…).
 // theme/variants/*.css hold declarations only: each is emitted as
-// `html.ghost-<name> { … }` in the main theme (the plugin toggles that class) and
-// as `:root:root { … }` in its own ghost-<name>.theme.css.
+// `html.ghost-<name>:not(.theme-light) { … }` in the main theme (the plugin
+// toggles that class) and as `:root:root:not(.theme-light) { … }` in its own
+// ghost-<name>.theme.css. Variants are dark variants: with Discord's light
+// theme they'd put its dark text on black.
 //
 //   node build.mjs                      one-off build
 //   node build.mjs --dev                rebuild on change
@@ -64,7 +66,7 @@ async function build() {
 
     const body = [
         ...parts.map((css, i) => `/* ${files[i]} */\n${css.trim()}\n`),
-        ...variants.map(v => `/* variants/${v.name}.css (plugin: html.ghost-${v.name}) */\nhtml.ghost-${v.name} {\n${v.body}\n}\n`),
+        ...variants.map(v => `/* variants/${v.name}.css (plugin: html.ghost-${v.name}) */\nhtml.ghost-${v.name}:not(.theme-light) {\n${v.body}\n}\n`),
     ].join("\n");
 
     const outputs = {
@@ -74,7 +76,7 @@ async function build() {
         const name = v.name.toUpperCase();
         outputs[`dist/ghost-${v.name}.theme.css`] =
             header(pkg, `Ghost ${name}`, `${pkg.description} ${name} variant.`) +
-            body + `\n/* ${name} variant */\n:root:root {\n${v.body}\n}\n`;
+            body + `\n/* ${name} variant */\n:root:root:not(.theme-light) {\n${v.body}\n}\n`;
     }
 
     // Refuse to publish CSS that doesn't parse: Discord would silently drop rules.

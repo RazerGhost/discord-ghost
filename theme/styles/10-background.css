@@ -85,3 +85,13 @@ html.ghost-plugin.ghost-grain {
   background: var(--ghost-art) center / cover no-repeat;
   filter: blur(var(--ghost-blur)) brightness(var(--ghost-brightness)) saturate(var(--ghost-saturation));
 }
+
+/* Discord's light theme: dark text on light glass, so the cover (dimmed for
+   dark themes) gets a white wash over it. #app-mount::before is free in
+   plugin mode and sits between <html>'s background and the app. */
+html.ghost-plugin.theme-light #app-mount::before {
+  display: block;
+  inset: 0;
+  filter: none;
+  background: rgb(255 255 255 / 0.6);
+}

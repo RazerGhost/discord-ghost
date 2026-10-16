@@ -5,11 +5,13 @@
  */
 
 // Accent colour (--ghost-accent; ghost.css maps it onto Discord's brand and
-// control variables): from the album art, a custom colour, or Discord's own
-// (html.ghost-accent-off, set by settings.ts).
+// control variables): from the album art, the current server's theme, a custom
+// colour, or Discord's own (html.ghost-accent-off, set by settings.ts).
 // spicetify-ghost asks Spotify for the cover's extracted colours; Discord has no
 // such API, so the colour is picked here from a 32×32 sample of the cover:
 // the hue with the most saturated weight, made readable on dark glass.
+
+import { FluxDispatcher } from "@webpack/common";
 
 import { albumArt, onTrackChange } from "./player";
 import { settings, watchSettings } from "./settings";
@@ -79,6 +81,26 @@ export function vibrantColor(img: HTMLImageElement): string | undefined {
     return toHex(readable([best.r / best.weight, best.g / best.weight, best.b / best.weight]));
 }
 
+/** The most colourful stop of the current server theme's gradient
+ *  (Discord's --custom-theme-background, set while a themed server — or a
+ *  Nitro colour theme — is active), made readable. ghost.css keeps the theme
+ *  itself from tinting anything; this only borrows its colour. */
+function serverThemeColor(): string | undefined {
+    if (!document.documentElement.classList.contains("custom-theme-background")) return undefined;
+    const gradient = getComputedStyle(document.documentElement).getPropertyValue("--custom-theme-background");
+    // Chroma (max − min), not HSL saturation: themes fade to near-black, and a
+    // near-black stop can be "fully saturated" while showing no colour.
+    let best: Rgb | undefined, bestChroma = -1;
+    for (const [stop] of gradient.matchAll(/#[\da-f]{6}|#[\da-f]{3}|rgba?\([^)]*\)/gi)) {
+        const rgb: Rgb = stop.startsWith("#")
+            ? (stop.length === 4 ? [...stop.slice(1)].map(c => parseInt(c + c, 16)) : [1, 3, 5].map(i => parseInt(stop.slice(i, i + 2), 16))) as Rgb
+            : stop.match(/[\d.]+/g)!.slice(0, 3).map(Number) as Rgb;
+        const chroma = Math.max(...rgb) - Math.min(...rgb);
+        if (chroma > bestChroma) [best, bestChroma] = [rgb, chroma];
+    }
+    return best && bestChroma > 16 ? toHex(readable(best)) : undefined;
+}
+
 function loadImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -102,6 +124,7 @@ async function updateAccent() {
     const s = settings.store;
     if (s.accentSource === "discord") return setAccent(undefined);
     if (s.accentSource === "custom") return setAccent(customAccent());
+    if (s.accentSource === "server") return setAccent(serverThemeColor() ?? customAccent());
 
     const art = albumArt();
     if (!art) return setAccent(customAccent()); // nothing playing
@@ -116,9 +139,30 @@ async function updateAccent() {
 
 let unsubscribe: (() => void)[] = [];
 
+/** Entering or leaving a themed server toggles html.custom-theme-background
+ *  at once, but the theme's colours arrive in a <style> in <head> about a
+ *  second later, so both are watched (debounced into one update). */
+function onServerChange(callback: () => void) {
+    let timer: ReturnType<typeof setTimeout>;
+    const later = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => settings.store.accentSource === "server" && callback(), 150);
+    };
+    FluxDispatcher.subscribe("CHANNEL_SELECT", later);
+    const observer = new MutationObserver(later);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    observer.observe(document.head, { childList: true, subtree: true, characterData: true });
+    return () => {
+        clearTimeout(timer);
+        FluxDispatcher.unsubscribe("CHANNEL_SELECT", later);
+        observer.disconnect();
+    };
+}
+
 export function startAccent() {
     unsubscribe = [
         onTrackChange(updateAccent),
+        onServerChange(updateAccent),
         watchSettings(s => [s.accentSource, s.accentColor], updateAccent),
     ];
 }

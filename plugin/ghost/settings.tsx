@@ -23,6 +23,14 @@ import { clearVars, setVar } from "./vars";
 
 const isHex = (value: string) => /^#[\da-f]{6}$/i.test(value.trim()) || "Use a hex colour, like #b9a4ff";
 
+/** Slider labels in whole units, for componentProps (passed on to Discord's
+ *  slider, which would show "47.38"). Dragging between markers still stores a
+ *  fraction; the values are rounded where they're applied. */
+const unit = (suffix: string) => ({
+    onValueRender: (v: number) => `${Math.round(v)}${suffix}`,
+    onMarkerRender: (v: number) => `${v}${suffix}`,
+});
+
 /** Every option calls this; it applies the CSS side and tells the watchers. */
 function changed() {
     applySettings();
@@ -86,6 +94,7 @@ export const settings = definePluginSettings({
         markers: makeRange(0, 160, 20),
         default: 96,
         stickToMarkers: false,
+        componentProps: unit(" px"),
         hidden: noImage,
         onChange: changed,
     },
@@ -96,6 +105,7 @@ export const settings = definePluginSettings({
         markers: makeRange(0, 200, 25),
         default: 35,
         stickToMarkers: false,
+        componentProps: unit("%"),
         hidden: noImage,
         onChange: changed,
     },
@@ -106,6 +116,7 @@ export const settings = definePluginSettings({
         markers: makeRange(0, 250, 50),
         default: 110,
         stickToMarkers: false,
+        componentProps: unit("%"),
         hidden: noImage,
         onChange: changed,
     },
@@ -126,6 +137,7 @@ export const settings = definePluginSettings({
         options: [
             { label: "My colour", value: "custom", default: true },
             { label: "From the album art", value: "spotify" },
+            { label: "From the server's theme", value: "server" },
             { label: "Discord's blurple", value: "discord" },
         ],
         onChange: changed,
@@ -133,7 +145,7 @@ export const settings = definePluginSettings({
     accentColor: {
         type: OptionType.STRING,
         displayName: "Colour",
-        description: "Hex. With album art, it's used while nothing plays.",
+        description: "Hex. With album art or server themes, it's used while nothing plays or the server has no theme.",
         default: "#b9a4ff",
         isValid: isHex,
         hidden: discordAccent,
@@ -146,6 +158,7 @@ export const settings = definePluginSettings({
         markers: makeRange(0, 40, 10),
         default: 0,
         stickToMarkers: false,
+        componentProps: unit("%"),
         hidden: discordAccent,
         onChange: changed,
     },
@@ -168,6 +181,7 @@ export const settings = definePluginSettings({
         markers: makeRange(0, 100, 10),
         default: 50,
         stickToMarkers: false,
+        componentProps: unit("%"),
         onChange: changed,
     },
     borderOpacity: {
@@ -177,6 +191,7 @@ export const settings = definePluginSettings({
         markers: makeRange(0, 40, 5),
         default: 6,
         stickToMarkers: false,
+        componentProps: unit("%"),
         onChange: changed,
     },
     radius: {
@@ -186,6 +201,7 @@ export const settings = definePluginSettings({
         markers: makeRange(0, 32, 4),
         default: 12,
         stickToMarkers: false,
+        componentProps: unit(" px"),
         onChange: changed,
     },
     gap: {
@@ -195,6 +211,7 @@ export const settings = definePluginSettings({
         markers: makeRange(0, 24, 4),
         default: 8,
         stickToMarkers: false,
+        componentProps: unit(" px"),
         onChange: changed,
     },
 });
@@ -223,15 +240,15 @@ const CLASSES = ["ghost-plugin", "ghost-oled", "ghost-grain", "ghost-bg-solid", 
 export function applySettings() {
     const s = settings.store;
     const vars: Record<string, string> = {
-        "--ghost-blur": `${s.blur}px`,
-        "--ghost-brightness": `${s.brightness / 100}`,
-        "--ghost-saturation": `${s.saturation / 100}`,
+        "--ghost-blur": `${Math.round(s.blur)}px`,
+        "--ghost-brightness": `${Math.round(s.brightness) / 100}`,
+        "--ghost-saturation": `${Math.round(s.saturation) / 100}`,
         "--ghost-bg-color": isHex(s.bgColor) === true ? s.bgColor.trim() : "#0b0b0f",
-        "--ghost-panel-alpha": `${s.panelOpacity / 100}`,
-        "--ghost-border-alpha": `${s.borderOpacity / 100}`,
-        "--ghost-radius": `${s.radius}px`,
-        "--ghost-gap": `${s.gap}px`,
-        "--ghost-tint": `${s.tint}%`,
+        "--ghost-panel-alpha": `${Math.round(s.panelOpacity) / 100}`,
+        "--ghost-border-alpha": `${Math.round(s.borderOpacity) / 100}`,
+        "--ghost-radius": `${Math.round(s.radius)}px`,
+        "--ghost-gap": `${Math.round(s.gap)}px`,
+        "--ghost-tint": `${Math.round(s.tint)}%`,
     };
     for (const [name, value] of Object.entries(vars)) setVar(name, value);
     applyClasses();

@@ -17,14 +17,15 @@ It comes in two parts:
 - **Background**: a heavily blurred, dimmed image (yours, or the current Spotify
   cover with the plugin) behind everything, so text on top stays easy to read. Panels are see-through instead of re-blurring what's
   behind them, so it stays cheap on the GPU.
-- **Glass panels**: the server list, channel list, chat and user panel are separate
-  rounded glass panels. The member list and message box sit inside the chat as a
-  lighter layer.
+- **Glass panels**: the server list, channel list and chat are separate rounded
+  glass panels, with the user panel (solid, so it always reads) lined up below the
+  lists. The member list is a card of its own inside the chat. Menus and popouts
+  share the panels' corner radius.
 - **Accent**: Discord's blurple is replaced everywhere (buttons, links, toggles,
-  mentions) by a colour you pick. With the plugin it can follow the album art
-  instead, if you want that.
+  mentions, reactions, highlights) by a colour you pick. With the plugin it can
+  follow the album art or the current server's theme instead, if you want that.
 - **Variants**: dark glass (default) or OLED (pure black panels). Discord's light
-  theme gets light glass.
+  theme gets light glass (OLED applies to the dark themes only).
 
 ## Install the theme
 
@@ -126,8 +127,9 @@ then, the same userplugin steps work in an Equicord checkout.
 - **Background**: album art from Spotify, a custom image, or a solid colour. With
   album art, your custom image (or the colour) shows while nothing plays. Blur,
   brightness, saturation, film grain.
-- **Accent**: your own colour (default), from the album art, or Discord's blurple.
-  Optional panel tint.
+- **Accent**: your own colour (default), from the album art, from the server's
+  theme (boosted servers; your colour elsewhere), or Discord's blurple. Optional
+  panel tint.
 - **Layout**: dark glass or OLED, panel opacity, border, corner radius and gap.
 
 Album art comes from Discord's own Spotify connection (Settings → Connections →
