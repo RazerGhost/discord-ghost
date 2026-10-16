@@ -1,0 +1,31 @@
+/* --- Activity cards -----------------------------------------------------------
+   "Listening to Spotify" (and games, which use the same card) in profiles and
+   profile popouts. Discord paints it with a grey wash, a strong border and a
+   white progress bar; Ghost makes it the inset glass of the message box and
+   the member list, with the panels' radius, and the progress bar the accent.
+
+   The card's classes are generic (card_, header_, body_, bar_, progress_), so
+   it's matched by its shape: a header and a body holding the details. */
+
+[class*="card_"]:has(> [class^="header_"] + [class^="body_"] [class^="details_"]) {
+  background: var(--ghost-inset) !important;
+  border: 1px solid var(--ghost-border) !important;
+  border-radius: var(--ghost-radius) !important;
+}
+
+/* Cover art (or game icon): the card's radius minus its padding, so the
+   corners stay concentric. */
+[class*="card_"]:has(> [class^="header_"] + [class^="body_"] [class^="details_"]) [class^="body_"] [class^="imageContainer_"] {
+  border-radius: max(4px, var(--ghost-radius) - 6px) !important;
+  overflow: hidden;
+}
+
+/* Progress bar (Spotify, timed activities). */
+[class*="card_"]:has(> [class^="header_"] + [class^="body_"]) [class^="bar_"]:has(> [class^="progress_"]) {
+  background: var(--ghost-border) !important;
+  border-radius: 999px;
+}
+
+html:not(.ghost-accent-off) [class*="card_"]:has(> [class^="header_"] + [class^="body_"]) [class^="bar_"] > [class^="progress_"] {
+  background: var(--ghost-accent) !important;
+}
