@@ -96,7 +96,8 @@
 
 /* --- User panel --------------------------------------------------------------
    Already a floating card in the refresh; line it up with the panels' gap
-   (Discord's own --custom-panels-spacing) and make it glass. */
+   (Discord's own --custom-panels-spacing). Solid, not glass: it overlaps the
+   channel list, and its name and status must read over any cover. */
 [class^="sidebar_"] section[class^="panels_"] {
   --custom-panels-spacing: var(--ghost-gap);
   background: var(--ghost-solid) !important;
