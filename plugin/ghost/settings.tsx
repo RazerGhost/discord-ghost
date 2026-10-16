@@ -12,6 +12,7 @@
 // spicetify-ghost's settings/store.ts. ghost.css reads those, so most settings
 // are purely a CSS concern; background.ts and accent.ts watch the rest.
 
+import { isPluginEnabled } from "@api/PluginManager";
 import { definePluginSettings } from "@api/Settings";
 import { Divider } from "@components/Divider";
 import { HeadingSecondary } from "@components/Heading";
@@ -37,15 +38,16 @@ function changed() {
     listeners.forEach(l => l());
 }
 
-/** A section heading in the settings list (a setting with no value of its own). */
-function section(title: string, description: string, first = false) {
+/** A section heading in the settings list (a setting with no value of its own).
+ *  A function as description is read each time the settings open. */
+function section(title: string, description: string | (() => string), first = false) {
     return {
         type: OptionType.COMPONENT,
         component: () => (
             <div>
                 {!first && <Divider className={Margins.bottom16} />}
                 <HeadingSecondary>{title}</HeadingSecondary>
-                <Paragraph>{description}</Paragraph>
+                <Paragraph>{typeof description === "function" ? description() : description}</Paragraph>
             </div>
         ),
     } as const;
@@ -214,6 +216,14 @@ export const settings = definePluginSettings({
         componentProps: unit(" px"),
         onChange: changed,
     },
+
+    // Ghost styles SpotifyControls' player (50-spotify-controls.css) rather
+    // than shipping its own: the player is Vencord's to maintain, and two
+    // players would stack in the user panel.
+    pairsSection: section("Works with", () =>
+        "SpotifyControls: a Spotify player above your account, which Ghost folds into the user panel in your accent. "
+        + (isPluginEnabled("SpotifyControls") ? "It's on." : "Turn it on under Plugins to add it.")
+    ),
 });
 
 export type Settings = typeof settings.store;

@@ -83,6 +83,9 @@
   mask: none !important;
   margin-bottom: calc(var(--custom-app-panels-height, 56px) + var(--ghost-gap)) !important;
   padding-bottom: var(--ghost-gap) !important;
+  /* The home button sat flush with the glass's top edge, its corners clipped
+     against the glass's rounded ones. */
+  padding-top: calc(var(--ghost-gap) / 2) !important;
   box-sizing: border-box;
 }
 

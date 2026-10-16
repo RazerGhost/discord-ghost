@@ -8,9 +8,19 @@
 
 #vc-spotify-player {
   background: transparent !important;
-  border-radius: 0 !important;
+  border-radius: var(--ghost-radius) var(--ghost-radius) 0 0 !important;
   border-bottom: 1px solid var(--ghost-border) !important;
   padding: 12px 12px 8px;
+}
+
+/* With the plugin's background: the player is glass like the lists above it —
+   the same blurred cover (fixed, so it lines up with the window's) under the
+   panel tint — instead of a solid block; the account row below stays solid. */
+html.ghost-plugin #vc-spotify-player {
+  background:
+    linear-gradient(var(--ghost-panel), var(--ghost-panel)),
+    var(--ghost-art, none) center / cover no-repeat fixed,
+    var(--ghost-bg-fill) !important;
 }
 
 html:not(.ghost-accent-off) #vc-spotify-player {
