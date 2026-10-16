@@ -117,17 +117,38 @@
    Already a floating card in the refresh, under both lists (which end a gap
    above it). Its edges line up with theirs: left with the server list's glass
    (half a gap in), right with the channel list's (a gap in), bottom with the
-   page's. Solid, not glass, so its name and status read over any cover. */
+   page's.
+
+   Glass like the lists, so whatever Discord stacks above the account row —
+   voice/call status, screen share, activities, SpotifyControls' player —
+   matches them instead of being a black block. The account row itself (name,
+   status, mic/headphones/settings) stays solid, so it reads over any cover. */
 [class^="sidebar_"] section[class^="panels_"] {
   --custom-panels-spacing: var(--ghost-gap);
   left: calc(var(--ghost-gap) / 2) !important;
   right: var(--ghost-gap) !important;
   bottom: var(--ghost-gap) !important;
   width: auto !important;
-  background: var(--ghost-solid) !important;
+  background: var(--ghost-panel) !important;
   border: none !important;
   border-radius: var(--ghost-radius) !important;
   box-shadow: inset 0 0 0 1px var(--ghost-border), 0 8px 24px rgb(0 0 0 / 0.25);
+}
+
+/* Sections above the account row: Discord's dividers in Ghost's border. */
+[class^="sidebar_"] section[class^="panels_"] > * {
+  border-bottom-color: var(--ghost-border) !important;
+}
+
+/* The account row: the container holding the account button and the
+   mic/headphones/settings buttons (or, failing that, the panel's last child). */
+[class^="sidebar_"] section[class^="panels_"] :is(
+  [class^="container_"]:has(> [class^="accountPopoutButtonWrapper_"]),
+  [class^="container_"]:has(> [class^="buttons_"])
+),
+[class^="sidebar_"] section[class^="panels_"]:not(:has([class^="accountPopoutButtonWrapper_"], [class^="buttons_"])) > :last-child {
+  background: var(--ghost-solid) !important;
+  border-radius: calc(var(--ghost-radius) - 1px) !important;
 }
 
 /* --- Chat header and member list ---------------------------------------------- */
