@@ -125,6 +125,10 @@
    status, mic/headphones/settings) stays solid, so it reads over any cover. */
 [class^="sidebar_"] section[class^="panels_"] {
   --custom-panels-spacing: var(--ghost-gap);
+  /* Discord's panel sections (suggested stream / clips, call, activity) paint
+     --background-surface-high, which 20-surfaces.css makes solid for menus
+     and popouts; in here it's the glass. */
+  --background-surface-high: transparent;
   left: calc(var(--ghost-gap) / 2) !important;
   right: var(--ghost-gap) !important;
   bottom: var(--ghost-gap) !important;
