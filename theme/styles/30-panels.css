@@ -215,3 +215,12 @@
 [class*="layerContainer_"] [class^="outer_"] > [class^="inner_"] {
   border-radius: max(0px, var(--ghost-radius) - 2px) !important;
 }
+
+/* --- Call view chat ------------------------------------------------------------
+   The text chat beside (or floating over) a voice/stage call and its video.
+   Discord paints it --background-base-lowest, transparent inside the app, so
+   the call's video and tiles showed through the messages; solid instead. */
+[class^="channelChatWrapper_"],
+[class^="chatLayerWrapper_"] [class^="chatTarget_"] {
+  background: var(--ghost-solid) !important;
+}
