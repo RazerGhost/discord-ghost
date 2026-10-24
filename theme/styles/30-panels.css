@@ -70,6 +70,13 @@
   padding-bottom: 0 !important;
 }
 
+/* The DM list's scroller does the same with a bottom margin of the panel's
+   height (taller in a call or with SpotifyControls), which clipped the last
+   DM rows off above an empty band. */
+[class^="sidebar_"] > [class^="sidebarList_"] [class^="scroller_"] {
+  margin-bottom: 0 !important;
+}
+
 /* Server list. isolation keeps the z-index: -1 glass above the app's
    background but behind the icons. Discord lets the list run 16px under the
    user panel and fades it out with a mask; instead it ends a gap above the
