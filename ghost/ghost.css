@@ -1,0 +1,682 @@
+/**
+ * @name Ghost
+ * @author RazerGhost
+ * @description A lightweight glassy Discord theme: blurred background, translucent rounded panels. Pairs with the Ghost Vencord plugin for album-art backgrounds from Spotify.
+ * @version 0.2.0
+ * @source https://github.com/RazerGhost/discord-ghost
+ * @website https://github.com/RazerGhost/discord-ghost
+ */
+/* 00-base.css */
+/* ==========================================================================
+   Ghost for Discord — lightweight glassy theme
+   Every tunable is a --ghost-* variable. Override them in QuickCSS
+   (:root { --ghost-blur: 32px; }), or let the Ghost Vencord plugin set them
+   (inline style on <html>, which wins over both).
+   ========================================================================== */
+
+:root {
+  /* Background */
+  --ghost-bg-image: none; /* url("https://…"); none = just --ghost-bg-color */
+  --ghost-bg-color: #0b0b0f;
+  --ghost-blur: 96px;
+  --ghost-brightness: 0.35;
+  --ghost-saturation: 1.1;
+  --ghost-fade: 900ms; /* crossfade between album covers (plugin) */
+
+  /* Glass */
+  --ghost-surface: #121216; /* panel colour before transparency; OLED: #000 */
+  --ghost-panel-alpha: 0.5;
+  --ghost-border-alpha: 0.06;
+  --ghost-radius: 12px;
+  --ghost-gap: 8px;
+
+  /* Colour */
+  --ghost-accent: #b9a4ff;
+  --ghost-tint: 0%; /* how much accent is mixed into the panels */
+
+  /* Derived — not meant to be set directly. Relative colour syntax, so the
+     panels follow the accent tint. */
+  --ghost-surface-tinted: color-mix(in oklab, var(--ghost-surface), var(--ghost-accent) var(--ghost-tint));
+  --ghost-panel: rgb(from var(--ghost-surface-tinted) r g b / var(--ghost-panel-alpha));
+  /* Panels inside panels (member list, message box): a second, lighter layer. */
+  --ghost-inset: rgb(from var(--ghost-surface-tinted) r g b / calc(var(--ghost-panel-alpha) * 0.6));
+  /* Modals (settings), popouts and menus: fully opaque. They sit over other
+     UI, not the background, and see-through windows only hurt reading. */
+  --ghost-solid: var(--ghost-surface-tinted);
+  --ghost-border: rgb(255 255 255 / var(--ghost-border-alpha));
+  /* Black or white, whichever reads better on the accent (l is OKLCH lightness). */
+  --ghost-on-accent: oklch(from var(--ghost-accent) clamp(0, (0.72 - l) * 1000, 1) 0 0);
+}
+
+/* Register the derived colours as real <color> properties. Unregistered, they
+   stay token streams and Chromium re-resolves the mix for every element that
+   uses them; registered, it's computed once on <html> and inherited as a colour. */
+@property --ghost-surface-tinted { syntax: "<color>"; inherits: true; initial-value: #121216; }
+@property --ghost-panel { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --ghost-inset { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --ghost-solid { syntax: "<color>"; inherits: true; initial-value: #121216; }
+@property --ghost-border { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --ghost-on-accent { syntax: "<color>"; inherits: true; initial-value: #000; }
+
+/* Light theme: light glass instead of dark, so Discord's dark text stays readable. */
+html.theme-light {
+  --ghost-surface: #f4f4f7;
+  --ghost-bg-color: #d8d8de;
+  --ghost-brightness: 1.05;
+  --ghost-panel-alpha: 0.55;
+  --ghost-border: rgb(0 0 0 / var(--ghost-border-alpha));
+}
+
+/* 10-background.css */
+/* --- Background -----------------------------------------------------------
+   One blurred image behind the whole app; the panels are translucent so it
+   shows through. Never backdrop-filter on the panels: that would re-blur what's
+   behind every panel on every redrawn frame (typing, scrolling, hovering).
+
+   Theme only: #app-mount::before, with a CSS filter. That's one blur on one
+   layer — it stays put, so Chromium keeps the result — but it is redone when
+   the window resizes. Pre-blurred images can use --ghost-blur: 0px.
+
+   With the plugin: <html>'s own background, an image the plugin has blurred
+   ONCE per cover (--ghost-art; no CSS filter at all). The root background is
+   painted with the page and needs no layer of its own behind Discord's. */
+
+html,
+body,
+#app-mount {
+  background: var(--ghost-bg-color) !important;
+}
+
+/* Own stacking context, so the z-index: -1 layer below stays above
+   #app-mount's own background instead of dropping behind <body>. */
+#app-mount {
+  isolation: isolate;
+}
+
+#app-mount::before {
+  content: "";
+  position: fixed;
+  /* overscan by 2× the blur so the edges don't fade to the background colour */
+  inset: calc(var(--ghost-blur) * -2);
+  z-index: -1;
+  pointer-events: none;
+  background: var(--ghost-bg-image) center / cover no-repeat;
+  filter: blur(var(--ghost-blur)) brightness(var(--ghost-brightness)) saturate(var(--ghost-saturation));
+}
+
+/* --- Plugin ---------------------------------------------------------------- */
+
+html.ghost-plugin #app-mount::before {
+  display: none;
+}
+
+/* Everything above <html> is see-through; <html> paints the baked cover over
+   the background colour. Covers crossfade through the background-image
+   transition (Chromium cross-fades images). */
+html.ghost-plugin :is(body, #app-mount) {
+  background: transparent !important;
+}
+
+/* The colour under the cover is what shows while nothing plays, so it gets the
+   cover's brightness: a bright pick would otherwise be a full-strength wall
+   behind all the text. As the chosen source ("Solid colour") it's shown as is. */
+html.ghost-plugin {
+  --ghost-bg-fill: color-mix(in oklab, var(--ghost-bg-color) calc(min(var(--ghost-brightness), 1) * 100%), black);
+}
+
+html.ghost-plugin.ghost-bg-solid {
+  --ghost-bg-fill: var(--ghost-bg-color);
+}
+
+html.ghost-plugin {
+  background:
+    var(--ghost-art, none) center / cover no-repeat fixed,
+    var(--ghost-bg-fill) !important;
+  transition: background-image var(--ghost-fade) ease;
+}
+
+/* Film grain: a tiny SVG noise tile as one more background layer on <html>,
+   blended over the cover. */
+html.ghost-plugin.ghost-grain {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E") repeat fixed,
+    var(--ghost-art, none) center / cover no-repeat fixed,
+    var(--ghost-bg-fill) !important;
+  background-blend-mode: overlay, normal, normal;
+}
+
+/* Custom image the plugin couldn't bake (served without CORS): its own layer
+   with a live filter, the only case that needs one. */
+#ghost-bg {
+  position: fixed;
+  inset: calc(var(--ghost-blur) * -2);
+  z-index: -1;
+  pointer-events: none;
+  background: var(--ghost-art) center / cover no-repeat;
+  filter: blur(var(--ghost-blur)) brightness(var(--ghost-brightness)) saturate(var(--ghost-saturation));
+}
+
+/* Discord's light theme: dark text on light glass, so the cover (dimmed for
+   dark themes) gets a white wash over it. #app-mount::before is free in
+   plugin mode and sits between <html>'s background and the app. */
+html.ghost-plugin.theme-light #app-mount::before {
+  display: block;
+  inset: 0;
+  filter: none;
+  background: rgb(255 255 255 / 0.6);
+}
+
+/* 20-surfaces.css */
+/* --- Discord's surface variables -------------------------------------------
+   First hook: Discord's own variables (2025 visual refresh). The app frame,
+   sidebars, chat and member list all paint --background-base-low/-lower/-lowest
+   (or --background-gradient-*, which fall back to those when no Nitro client
+   theme is active).
+
+   Two scopes:
+   - Everywhere (modals such as settings, popouts, menus): the Ghost surface
+     colour, fully opaque. Nothing needs to show through those, and text in
+     them should read as on any solid window.
+   - Inside the app's base layer only: transparent, so the background shows
+     through and the panels in 30-panels.css add the glass. Modals and popouts
+     are rendered outside the base layer, so they keep the opaque colours.
+
+   Discord defines these in .theme-dark / .theme-darker / .theme-midnight /
+   .theme-light — on <html> and again on popout roots — and once more inside
+   @supports blocks. `html:is(…)` / `html :is(…)` / `html [class*=…]` are
+   (0,1,1) and up, so they win whichever order the stylesheets load in. */
+
+html:is(.theme-dark, .theme-darker, .theme-midnight, .theme-light),
+html :is(.theme-dark, .theme-darker, .theme-midnight, .theme-light) {
+  --background-base-lowest: var(--ghost-solid);
+  --background-base-lower: var(--ghost-solid);
+  --background-base-low: color-mix(in oklab, var(--ghost-solid), white 2%);
+  --app-frame-background: var(--ghost-solid);
+  --chat-background-default: var(--ghost-solid);
+  --panel-bg: var(--ghost-solid);
+  --modal-background: var(--ghost-solid);
+  --background-surface-high: color-mix(in oklab, var(--ghost-solid), white 3%);
+  --background-surface-higher: color-mix(in oklab, var(--ghost-solid), white 5%);
+  --background-surface-highest: color-mix(in oklab, var(--ghost-solid), white 8%);
+  /* Lighter layers inside a panel or window: the message box, cards. */
+  --channeltextarea-background: var(--ghost-inset);
+  --card-background-default: var(--ghost-inset);
+  --border-subtle: var(--ghost-border);
+}
+
+/* The light theme's text is dark: lighter layers there are darker, not lighter. */
+html.theme-light,
+html .theme-light {
+  --background-base-low: color-mix(in oklab, var(--ghost-solid), black 2%);
+  --background-surface-high: color-mix(in oklab, var(--ghost-solid), black 3%);
+  --background-surface-higher: color-mix(in oklab, var(--ghost-solid), black 5%);
+  --background-surface-highest: color-mix(in oklab, var(--ghost-solid), black 8%);
+}
+
+/* The app itself (server list, channels, chat): see-through. */
+html [class*="baseLayer_"],
+html [class*="baseLayer_"] :is(.theme-dark, .theme-darker, .theme-midnight, .theme-light) {
+  --background-base-lowest: transparent;
+  --background-base-lower: transparent;
+  --background-base-low: transparent;
+  --app-frame-background: transparent;
+  --app-frame-border: transparent;
+  --chat-background-default: transparent;
+  --panel-bg: transparent;
+  --home-background: transparent;
+  --custom-channel-members-bg: transparent;
+}
+
+/* The app frame around the base layer paints --background-base-lowest, which
+   is opaque outside the base layer — clear it directly. bg_ is an empty
+   decorative layer; :empty keeps the short prefix from matching anything else. */
+#app-mount :is([class^="app_"], [class^="layers_"], [class^="bg_"]:empty) {
+  background: transparent !important;
+}
+
+/* Dialogs (settings, profiles, confirmations) stay opaque even if Discord
+   renders one inside the base layer: role="dialog" sets the colours back on
+   the dialog itself, which beats what it would inherit. */
+html [role="dialog"] {
+  --background-base-lowest: var(--ghost-solid);
+  --background-base-lower: var(--ghost-solid);
+  --background-base-low: color-mix(in oklab, var(--ghost-solid), white 2%);
+  --chat-background-default: var(--ghost-solid);
+  --panel-bg: var(--ghost-solid);
+}
+
+/* Server themes (a boost perk) and Nitro colour themes: Discord adds
+   .custom-theme-background / .custom-client-theme to <html> and mixes the
+   theme's colours into nearly every colour variable — up to 88% into
+   surfaces, scrollbars and borders, ~30% into text — and paints chat and
+   sidebars with --background-gradient-*. Ghost's colours are the user's, so
+   the mix amounts go to 0% (as Discord's own .disable-adaptive-theme does), and
+   the gradient variables to `initial`, which makes Discord's
+   var(--background-gradient-*, fallback) take its fallback: Ghost's surfaces. */
+html:is(.custom-theme-background, .custom-client-theme),
+html :is(.custom-theme-background, .custom-client-theme) {
+  --custom-theme-base-color-amount: 0% !important;
+  --custom-theme-text-color-amount: 0% !important;
+  --custom-theme-border-color-amount: 0% !important;
+  --background-gradient-chat: initial;
+  --background-gradient-chat-preview: initial;
+  --background-gradient-app-frame: initial;
+  --background-gradient-lowest: initial;
+  --background-gradient-lower: initial;
+  --background-gradient-low: initial;
+  --background-gradient-high: initial;
+  --background-gradient-higher: initial;
+  --background-gradient-highest: initial;
+}
+
+/* 30-panels.css */
+/* --- Panels ---------------------------------------------------------------
+   Server list, channel list and the page (chat, DMs, friends, forums…) become
+   separate rounded glass panels with a gap between them; the member list is a
+   lighter layer inside the chat panel; the user panel floats at the bottom.
+
+   Hooks, best first: Discord's variables (20-surfaces.css, and the
+   --custom-* layout variables below) → data-list-id / role / aria → class-name
+   prefixes. Discord's classes are "name_hash" or "name__hash" (both exist in
+   2025 builds), and the hash changes between builds, so classes are only ever
+   matched by their prefix: [class^="sidebarList_"] matches sidebarList__5e434.
+   ^= assumes Discord puts the base class first, which its CSS modules do.
+   Short prefixes (page_, sidebar_, chat_) exist in other modules too, so they
+   are always anchored to their parent in the layout below.
+
+   Layout as of the visual refresh (Discord's CSS, 2025):
+     [class^="base_"]          grid: titleBar / guildsList · channelsList · page
+       [class^="bar_"]         title bar
+       [class^="content_"]
+         [class^="sidebar_"]   guild list + channel list (+ user panel over both)
+           nav ⊃ [data-list-id="guildsnav"]    server list
+           [class^="sidebarList_"]              channel list / DM list
+           section[class^="panels_"]            user panel (position: absolute)
+         [class^="page_"]      chat | friends | forum | …
+           [class^="chat_"] ⊃ section[class^="title_"] (header) ·
+                               [class^="chatContent_"] · [class^="membersWrap_"]
+
+   Channel list and page: the gap is a transparent border with background-clip,
+   not margins (they're fixed-width grid items; margins would push them out of
+   their tracks). The page has no left border, since the channel list's right
+   border already spaces them, and the title bar above spaces the top. Each
+   corner's radius is the inner --ghost-radius plus the border on that side
+   (per axis), so the inside corner is a clean circle.
+
+   Server list: Discord sizes its items, folder backgrounds and unread badges
+   from --custom-guild-list-width and its padding, so the column keeps
+   Discord's width and no border; the glass is a ::before inset by half the
+   gap on each side. */
+
+:is([class^="sidebar_"] > [class^="sidebarList_"], [class^="content_"] > [class^="page_"]) {
+  --ghost-edge-top: 0px;
+  --ghost-edge-left: 0px;
+  --ghost-edge-right: var(--ghost-gap);
+  --ghost-edge-bottom: var(--ghost-gap);
+  background: var(--ghost-panel) padding-box !important;
+  border-style: solid !important;
+  border-color: transparent !important;
+  border-width: var(--ghost-edge-top) var(--ghost-edge-right) var(--ghost-edge-bottom) var(--ghost-edge-left) !important;
+  border-radius:
+    calc(var(--ghost-radius) + var(--ghost-edge-left)) calc(var(--ghost-radius) + var(--ghost-edge-right))
+    calc(var(--ghost-radius) + var(--ghost-edge-right)) calc(var(--ghost-radius) + var(--ghost-edge-left)) /
+    calc(var(--ghost-radius) + var(--ghost-edge-top)) calc(var(--ghost-radius) + var(--ghost-edge-top))
+    calc(var(--ghost-radius) + var(--ghost-edge-bottom)) calc(var(--ghost-radius) + var(--ghost-edge-bottom)) !important;
+  box-shadow: inset 0 0 0 1px var(--ghost-border);
+  overflow: hidden;
+}
+
+/* The server list sits half a gap from the channel list: give that the other
+   half. The bottom edge leaves room for the user panel, which Discord floats
+   over the bottom of both lists: the panel's height (Discord's
+   --custom-app-panels-height) plus a gap on each side of it. */
+[class^="sidebar_"] > [class^="sidebarList_"] {
+  --ghost-edge-left: calc(var(--ghost-gap) / 2);
+  --ghost-edge-bottom: calc(var(--custom-app-panels-height, 56px) + var(--ghost-gap) * 2);
+}
+
+/* Discord pads the bottom of the channel list by the panel's height, for the
+   panel over it; the list ends above the panel now, so that would only leave
+   an empty band at the bottom of the glass. */
+[class^="sidebar_"] > [class^="sidebarList_"] > [class^="container_"] {
+  padding-bottom: 0 !important;
+}
+
+/* The DM list's scroller does the same with a bottom margin of the panel's
+   height (taller in a call or with SpotifyControls), which clipped the last
+   DM rows off above an empty band. */
+[class^="sidebar_"] > [class^="sidebarList_"] [class^="scroller_"] {
+  margin-bottom: 0 !important;
+}
+
+/* Everything else inside the list that makes room for the panel — the "new
+   unreads" / unread mentions bars at the bottom of the channel and DM lists —
+   sits the panel's height above the list's bottom, so it floated mid-list.
+   Inside the list (not on it: its own bottom edge above reads the real
+   height) the panel takes no room. */
+[class^="sidebar_"] > [class^="sidebarList_"] > * {
+  --custom-app-panels-height: 0px !important;
+}
+
+/* Server list. isolation keeps the z-index: -1 glass above the app's
+   background but behind the icons. Discord lets the list run 16px under the
+   user panel and fades it out with a mask; instead it ends a gap above the
+   panel (the margin, plus the glass's own bottom inset), so no mask. The
+   padding keeps the icons inside the glass: without it they scroll down past
+   it, into the gap above the user panel. */
+:is(nav:has([data-list-id="guildsnav"]), [class^="sidebar_"] > nav) {
+  isolation: isolate;
+  background: transparent !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  margin-bottom: calc(var(--custom-app-panels-height, 56px) + var(--ghost-gap)) !important;
+  padding-bottom: var(--ghost-gap) !important;
+  /* The home button sat flush with the glass's top edge, its corners clipped
+     against the glass's rounded ones. */
+  padding-top: calc(var(--ghost-gap) / 2) !important;
+  box-sizing: border-box;
+}
+
+:is(nav:has([data-list-id="guildsnav"]), [class^="sidebar_"] > nav)::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc(var(--ghost-gap) / 2) var(--ghost-gap);
+  z-index: -1;
+  background: var(--ghost-panel);
+  border-radius: var(--ghost-radius);
+  box-shadow: inset 0 0 0 1px var(--ghost-border);
+  pointer-events: none;
+}
+
+/* Strip Discord's own frame lines and corner shapes inside the panels. */
+[class^="content_"] > [class^="page_"] :is([class^="chat_"], [class^="chatContent_"]),
+[class^="sidebar_"] > [class^="sidebarList_"] [class^="privateChannels_"] {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Hides a strip Discord draws at the bottom of the sidebar, under the user panel. */
+[class^="content_"] > [class^="sidebar_"]::after {
+  display: none !important;
+}
+
+/* --- User panel --------------------------------------------------------------
+   Already a floating card in the refresh, under both lists (which end a gap
+   above it). Its edges line up with theirs: left with the server list's glass
+   (half a gap in), right with the channel list's (a gap in), bottom with the
+   page's.
+
+   Glass like the lists, so whatever Discord stacks above the account row —
+   voice/call status, screen share, activities, SpotifyControls' player —
+   matches them instead of being a black block. The account row itself (name,
+   status, mic/headphones/settings) stays solid, so it reads over any cover. */
+[class^="sidebar_"] section[class^="panels_"] {
+  --custom-panels-spacing: var(--ghost-gap);
+  /* Discord's panel sections (suggested stream / clips, call, activity) paint
+     --background-surface-high, which 20-surfaces.css makes solid for menus
+     and popouts; in here it's the glass. */
+  --background-surface-high: transparent;
+  left: calc(var(--ghost-gap) / 2) !important;
+  right: var(--ghost-gap) !important;
+  bottom: var(--ghost-gap) !important;
+  width: auto !important;
+  background: var(--ghost-panel) !important;
+  border: none !important;
+  border-radius: var(--ghost-radius) !important;
+  box-shadow: inset 0 0 0 1px var(--ghost-border), 0 8px 24px rgb(0 0 0 / 0.25);
+}
+
+/* Sections above the account row: Discord's dividers in Ghost's border. */
+[class^="sidebar_"] section[class^="panels_"] > * {
+  border-bottom-color: var(--ghost-border) !important;
+}
+
+/* The account row: the container holding the account button and the
+   mic/headphones/settings buttons (or, failing that, the panel's last child). */
+[class^="sidebar_"] section[class^="panels_"] :is(
+  [class^="container_"]:has(> [class^="accountPopoutButtonWrapper_"]),
+  [class^="container_"]:has(> [class^="buttons_"])
+),
+[class^="sidebar_"] section[class^="panels_"]:not(:has([class^="accountPopoutButtonWrapper_"], [class^="buttons_"])) > :last-child {
+  background: var(--ghost-solid) !important;
+  border-radius: calc(var(--ghost-radius) - 1px) !important;
+}
+
+/* --- Chat header and member list ---------------------------------------------- */
+
+/* Header bar: transparent, with one line under it. --__header-bar-background
+   is Discord's variable for it (also used for the fade behind long topics). */
+[class^="content_"] > [class^="page_"] section[class^="title_"] {
+  --__header-bar-background: transparent;
+  background: transparent !important;
+  box-shadow: inset 0 -1px 0 var(--ghost-border) !important;
+  border: none !important;
+}
+
+[class^="membersWrap_"] [class^="members_"] {
+  background: transparent !important;
+}
+
+/* The member list: a card of its own inside the page, a gap in from the
+   page's edges and from the chat, rounded like the message box. */
+[class^="membersWrap_"] {
+  background: var(--ghost-inset) !important;
+  box-shadow: inset 0 0 0 1px var(--ghost-border);
+  border-radius: var(--ghost-radius);
+  margin: var(--ghost-gap) var(--ghost-gap) var(--ghost-gap) 0;
+  overflow: hidden;
+}
+
+/* Message box: --channeltextarea-background (20-surfaces.css) colours it. */
+[class^="channelTextArea_"] {
+  border-radius: var(--ghost-radius) !important;
+  box-shadow: inset 0 0 0 1px var(--ghost-border);
+}
+
+/* --- Full-window layers ------------------------------------------------------
+   User/server settings open as a second layer over the app. With transparent
+   base colours they'd show the app through; give them solid glass. The base
+   layer (the app itself) stays transparent. */
+[class^="layers_"] > [class^="layer_"]:not([class*="baseLayer_"]) {
+  background: var(--ghost-solid) !important;
+}
+
+/* --- Notices -----------------------------------------------------------------
+   The bar across the top ("You were in a voice channel…", update notices) sits
+   in the layout grid's notice row, above the channel list and page. Inset and
+   round it like a panel instead of running edge to edge. */
+:is([class^="base_"], [class^="content_"]) > [class^="notice_"] {
+  margin: 0 var(--ghost-gap) var(--ghost-gap) 0;
+  border-radius: var(--ghost-radius);
+}
+
+/* --- Menus and popouts ------------------------------------------------------
+   Floating surfaces get the panels' corner radius instead of Discord's 8px.
+   Profile popouts are an outer frame with a 2px border around an inner box;
+   the inner radius is the outer one minus that border. */
+[class^="menu_"][role="menu"],
+[class*="layerContainer_"] [class^="outer_"]:has(> [class^="inner_"]) {
+  border-radius: var(--ghost-radius) !important;
+}
+
+[class*="layerContainer_"] [class^="outer_"] > [class^="inner_"] {
+  border-radius: max(0px, var(--ghost-radius) - 2px) !important;
+}
+
+/* --- Call view chat ------------------------------------------------------------
+   The text chat beside (or floating over) a voice/stage call and its video.
+   Discord paints it --background-base-lowest, transparent inside the app, so
+   the call's video and tiles showed through the messages; solid instead. */
+[class^="channelChatWrapper_"],
+[class^="chatLayerWrapper_"] [class^="chatTarget_"] {
+  background: var(--ghost-solid) !important;
+}
+
+/* 40-activity.css */
+/* --- Activity cards -----------------------------------------------------------
+   "Listening to Spotify" (and games, which use the same card) in profiles and
+   profile popouts. Discord paints it with a grey wash, a strong border and a
+   white progress bar; Ghost makes it the inset glass of the message box and
+   the member list, with the panels' radius, and the progress bar the accent.
+
+   The card's classes are generic (card_, header_, body_, bar_, progress_), so
+   it's matched by its shape: a header and a body holding the details. */
+
+[class*="card_"]:has(> [class^="header_"] + [class^="body_"] [class^="details_"]) {
+  background: var(--ghost-inset) !important;
+  border: 1px solid var(--ghost-border) !important;
+  border-radius: var(--ghost-radius) !important;
+}
+
+/* Cover art (or game icon): the card's radius minus its padding, so the
+   corners stay concentric. */
+[class*="card_"]:has(> [class^="header_"] + [class^="body_"] [class^="details_"]) [class^="body_"] [class^="imageContainer_"] {
+  border-radius: max(4px, var(--ghost-radius) - 6px) !important;
+  overflow: hidden;
+}
+
+/* Progress bar (Spotify, timed activities). */
+[class*="card_"]:has(> [class^="header_"] + [class^="body_"]) [class^="bar_"]:has(> [class^="progress_"]) {
+  background: var(--ghost-border) !important;
+  border-radius: 999px;
+}
+
+html:not(.ghost-accent-off) [class*="card_"]:has(> [class^="header_"] + [class^="body_"]) [class^="bar_"] > [class^="progress_"] {
+  background: var(--ghost-accent) !important;
+}
+
+/* 50-spotify-controls.css */
+/* --- SpotifyControls (Vencord / Equicord plugin) -----------------------------
+   The player it adds sits inside the user panel, above the account row. It
+   brings its own dark background, top corners and divider; here it becomes
+   part of the panel's glass (30-panels.css) instead: no background of its
+   own, Ghost's border as the divider, the panels' radius on the cover, and
+   the accent for progress and the shuffle/repeat states (Spotify green when
+   the accent is Discord's).
+   Its ids and vc- classes are the plugin's own, stable across Discord builds. */
+
+#vc-spotify-player {
+  background: transparent !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--ghost-border) !important;
+  padding: 12px 12px 8px;
+}
+
+html:not(.ghost-accent-off) #vc-spotify-player {
+  --vc-spotify-green: var(--ghost-accent);
+}
+
+#vc-spotify-album-image {
+  border-radius: max(4px, var(--ghost-radius) / 2) !important;
+}
+
+/* Progress: the played part in the accent, always (the plugin only colours it
+   on hover), on a track in Ghost's border colour. Discord's slider now sits
+   two levels deeper than the plugin's own `> [class*="slider"]` expects, so
+   its rules miss and Discord's blurple shows; these match at any depth. */
+#vc-spotify-progress-bar [class^="slider_"] [class^="bar_"] {
+  background-color: var(--ghost-border) !important;
+  border-radius: 999px;
+}
+
+#vc-spotify-progress-bar [class^="slider_"] [class^="barFill_"] {
+  background-color: var(--vc-spotify-green) !important;
+}
+
+/* The knob only while hovering, as the plugin intends. */
+#vc-spotify-progress-bar [class^="slider_"] [class^="grabber_"] {
+  background-color: var(--vc-spotify-green) !important;
+  border-color: transparent !important;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+#vc-spotify-progress-bar:hover [class^="slider_"] [class^="grabber_"] {
+  opacity: 1;
+}
+
+.vc-spotify-button {
+  border-radius: max(4px, var(--ghost-radius) / 2);
+}
+
+/* 90-accent.css */
+/* --- Accent -----------------------------------------------------------------
+   Discord's blurple, replaced by --ghost-accent (the plugin sets it from the
+   album art). Buttons, toggles, links, mentions of you, unread pills and the
+   selected-server pill all read these brand/control variables.
+   Specificity as in 20-surfaces.css, so this wins over Discord's own blocks;
+   html.ghost-accent-off (plugin: "Discord's" accent) turns it all off.
+   Discord's --brand-*-hsl / --opacity-blurple-*-hsl twins can't be derived
+   (CSS can't turn a colour back into hsl channels), so the translucent washes
+   built from them — mentions, reactions, highlights, code — are replaced one
+   variable at a time, at Discord's own dark-theme strengths. */
+
+html:not(.ghost-accent-off),
+html:not(.ghost-accent-off) :is(.theme-dark, .theme-darker, .theme-midnight, .theme-light, .visual-refresh) {
+  --brand-500: var(--ghost-accent);
+  --brand-530: color-mix(in oklab, var(--ghost-accent), black 8%);
+  --brand-560: color-mix(in oklab, var(--ghost-accent), black 15%);
+  --brand-600: color-mix(in oklab, var(--ghost-accent), black 22%);
+  --brand-460: color-mix(in oklab, var(--ghost-accent), white 8%);
+  --brand-430: color-mix(in oklab, var(--ghost-accent), white 12%);
+  --brand-400: color-mix(in oklab, var(--ghost-accent), white 18%);
+  --brand-360: color-mix(in oklab, var(--ghost-accent), white 30%);
+  --brand-330: color-mix(in oklab, var(--ghost-accent), white 40%);
+  --brand-300: color-mix(in oklab, var(--ghost-accent), white 50%);
+  --brand-260: color-mix(in oklab, var(--ghost-accent), white 60%);
+  --brand-230: color-mix(in oklab, var(--ghost-accent), white 70%);
+  --brand-200: color-mix(in oklab, var(--ghost-accent), white 78%);
+
+  --background-brand: var(--ghost-accent);
+  --text-brand: var(--brand-360);
+  --icon-brand: var(--brand-360);
+  --text-link: var(--brand-360);
+  --control-brand-foreground: var(--brand-360);
+  --control-brand-foreground-new: var(--brand-360);
+  --control-primary-background-default: var(--ghost-accent);
+  --control-primary-background-hover: var(--brand-560);
+  --control-primary-background-active: var(--brand-600);
+  --control-primary-text-default: var(--ghost-on-accent);
+  --control-primary-text-hover: var(--ghost-on-accent);
+  --control-primary-text-active: var(--ghost-on-accent);
+  --control-primary-icon-default: var(--ghost-on-accent);
+  --control-primary-icon-hover: var(--ghost-on-accent);
+  --control-primary-icon-active: var(--ghost-on-accent);
+  --checkbox-background-selected-default: var(--ghost-accent);
+  --checkbox-background-selected-hover: var(--brand-560);
+  --badge-primary-background: var(--ghost-accent);
+
+  --border-focus: var(--brand-360);
+  --mention-background: rgb(from var(--ghost-accent) r g b / 0.24);
+  --message-highlight-background-default: rgb(from var(--ghost-accent) r g b / 0.16);
+  --message-highlight-background-hover: rgb(from var(--ghost-accent) r g b / 0.12);
+  --reaction-background-reacted-default: rgb(from var(--ghost-accent) r g b / 0.24);
+  --reaction-background-reacted-hover: rgb(from var(--ghost-accent) r g b / 0.32);
+  --reaction-border-reacted-default: var(--ghost-accent);
+  --togglebutton-background-selected: rgb(from var(--ghost-accent) r g b / 0.16);
+  --togglebutton-background-selected-hover: rgb(from var(--ghost-accent) r g b / 0.24);
+  --togglebutton-border-selected: var(--ghost-accent);
+  --togglebutton-border-active: rgb(from var(--ghost-accent) r g b / 0.84);
+  --background-code: rgb(from var(--ghost-accent) r g b / 0.08);
+  --polls-voted-fill: rgb(from var(--ghost-accent) r g b / 0.2);
+}
+
+/* The file-drop overlay paints a literal blurple, no variable. */
+html:not(.ghost-accent-off) [class^="uploadDropModal_"] [class^="bgScale_"] {
+  background-color: var(--ghost-accent) !important;
+}
+
+/* Text selection in the accent. */
+::selection {
+  background: rgb(from var(--ghost-accent) r g b / 0.35);
+}
+
+/* variants/oled.css (plugin: html.ghost-oled) */
+html.ghost-oled:not(.theme-light) {
+  --ghost-surface: #000;
+  --ghost-bg-color: #000;
+  --ghost-brightness: 0.3;
+  --ghost-panel-alpha: 0.55;
+  --ghost-border-alpha: 0.08;
+}
