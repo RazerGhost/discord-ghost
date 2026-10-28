@@ -77,6 +77,15 @@
   margin-bottom: 0 !important;
 }
 
+/* Everything else inside the list that makes room for the panel — the "new
+   unreads" / unread mentions bars at the bottom of the channel and DM lists —
+   sits the panel's height above the list's bottom, so it floated mid-list.
+   Inside the list (not on it: its own bottom edge above reads the real
+   height) the panel takes no room. */
+[class^="sidebar_"] > [class^="sidebarList_"] > * {
+  --custom-app-panels-height: 0px !important;
+}
+
 /* Server list. isolation keeps the z-index: -1 glass above the app's
    background but behind the icons. Discord lets the list run 16px under the
    user panel and fades it out with a mask; instead it ends a gap above the
