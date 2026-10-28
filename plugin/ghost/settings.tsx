@@ -140,6 +140,7 @@ export const settings = definePluginSettings({
             { label: "My colour", value: "custom", default: true },
             { label: "From the album art", value: "spotify" },
             { label: "From the server's theme", value: "server" },
+            { label: "From matugen", value: "matugen" },
             { label: "Discord's blurple", value: "discord" },
         ],
         onChange: changed,
@@ -147,7 +148,7 @@ export const settings = definePluginSettings({
     accentColor: {
         type: OptionType.STRING,
         displayName: "Colour",
-        description: "Hex. With album art or server themes, it's used while nothing plays or the server has no theme.",
+        description: "Hex. With album art, server themes or matugen, it's used while nothing plays, the server has no theme or there's no matugen theme.",
         default: "#b9a4ff",
         isValid: isHex,
         hidden: discordAccent,
@@ -166,6 +167,13 @@ export const settings = definePluginSettings({
     },
 
     panelsSection: section("Panels", "The glass panels: server list, channels, chat and user panel."),
+    matugenColors: {
+        type: OptionType.BOOLEAN,
+        displayName: "Colours from matugen",
+        description: "Panel and background colours from the ghost-matugen.css theme a matugen template writes (see Ghost's README). Without that theme, Ghost's own colours stay. The OLED style keeps panels black.",
+        default: false,
+        onChange: changed,
+    },
     variant: {
         type: OptionType.SELECT,
         displayName: "Style",
@@ -245,6 +253,11 @@ export function watchSettings(select: (s: Settings) => unknown, onChange: () => 
     return () => void listeners.delete(listener);
 }
 
+/** A matugen colour from the ghost-matugen.css theme, with `fallback` for when
+ *  that theme isn't installed or enabled. Vencord reloads the theme when
+ *  matugen rewrites it, so references update live. */
+export const matugen = (on: boolean, name: string, fallback: string) => (on ? `var(${name}, ${fallback})` : fallback);
+
 const CLASSES = ["ghost-plugin", "ghost-oled", "ghost-grain", "ghost-bg-solid", "ghost-accent-off"];
 
 export function applySettings() {
@@ -253,7 +266,7 @@ export function applySettings() {
         "--ghost-blur": `${Math.round(s.blur)}px`,
         "--ghost-brightness": `${Math.round(s.brightness) / 100}`,
         "--ghost-saturation": `${Math.round(s.saturation) / 100}`,
-        "--ghost-bg-color": isHex(s.bgColor) === true ? s.bgColor.trim() : "#0b0b0f",
+        "--ghost-bg-color": matugen(s.matugenColors, "--matugen-background", isHex(s.bgColor) === true ? s.bgColor.trim() : "#0b0b0f"),
         "--ghost-panel-alpha": `${Math.round(s.panelOpacity) / 100}`,
         "--ghost-border-alpha": `${Math.round(s.borderOpacity) / 100}`,
         "--ghost-radius": `${Math.round(s.radius)}px`,
@@ -261,6 +274,8 @@ export function applySettings() {
         "--ghost-tint": `${Math.round(s.tint)}%`,
     };
     for (const [name, value] of Object.entries(vars)) setVar(name, value);
+    // Unset, the theme's own surface applies (and its light-theme one).
+    setVar("--ghost-surface", s.matugenColors ? matugen(true, "--matugen-surface", "#121216") : undefined);
     applyClasses();
     watchClasses();
 }

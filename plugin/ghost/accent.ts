@@ -5,8 +5,9 @@
  */
 
 // Accent colour (--ghost-accent; ghost.css maps it onto Discord's brand and
-// control variables): from the album art, the current server's theme, a custom
-// colour, or Discord's own (html.ghost-accent-off, set by settings.ts).
+// control variables): from the album art, the current server's theme, matugen
+// (a reference to its theme's --matugen-primary), a custom colour, or
+// Discord's own (html.ghost-accent-off, set by settings.ts).
 // spicetify-ghost asks Spotify for the cover's extracted colours; Discord has no
 // such API, so the colour is picked here from a 32×32 sample of the cover:
 // the hue with the most saturated weight, made readable on dark glass.
@@ -14,7 +15,7 @@
 import { FluxDispatcher } from "@webpack/common";
 
 import { albumArt, onTrackChange } from "./player";
-import { settings, watchSettings } from "./settings";
+import { matugen, settings, watchSettings } from "./settings";
 import { setVar } from "./vars";
 
 type Rgb = [number, number, number];
@@ -125,6 +126,7 @@ async function updateAccent() {
     if (s.accentSource === "discord") return setAccent(undefined);
     if (s.accentSource === "custom") return setAccent(customAccent());
     if (s.accentSource === "server") return setAccent(serverThemeColor() ?? customAccent());
+    if (s.accentSource === "matugen") return setAccent(matugen(true, "--matugen-primary", customAccent() ?? "#b9a4ff"));
 
     const art = albumArt();
     if (!art) return setAccent(customAccent()); // nothing playing

@@ -129,13 +129,66 @@ then, the same userplugin steps work in an Equicord checkout.
   album art, your custom image (or the colour) shows while nothing plays. Blur,
   brightness, saturation, film grain.
 - **Accent**: your own colour (default), from the album art, from the server's
-  theme (boosted servers; your colour elsewhere), or Discord's blurple. Optional
-  panel tint.
-- **Layout**: dark glass or OLED, panel opacity, border, corner radius and gap.
+  theme (boosted servers; your colour elsewhere), from matugen, or Discord's
+  blurple. Optional panel tint.
+- **Layout**: dark glass or OLED, panel and background colours from matugen, panel
+  opacity, border, corner radius and gap.
 
 Album art comes from Discord's own Spotify connection (Settings → Connections →
 Spotify). You don't need Vencord's SpotifyControls plugin. The cover is blurred once
 per song into a small image, so a playing track costs nothing per frame.
+
+## Linux, Vesktop and matugen
+
+The theme and plugin work the same in [Vesktop](https://github.com/Vencord/Vesktop).
+For the plugin, build Vencord with Ghost as a userplugin (see above) and point
+Vesktop at that build: Settings → Vesktop → Developer options → **Vencord location**
+(`vencordDir` in `~/.config/vesktop/state.json`), then restart Vesktop.
+
+On a tiling or decoration-less compositor such as Hyprland, turn on Vesktop's
+**native title bar** (`"nativeTitleBar": true` in `~/.config/vesktop/settings.json`).
+Vesktop then opens a normal window instead of drawing minimize/maximize/close
+buttons into Discord's title bar, and the compositor handles the window (on
+Hyprland, Super+drag moves it).
+
+### Colours from matugen
+
+[matugen](https://github.com/InioX/matugen) can give Ghost its colours from your
+wallpaper. Have it write this template to `~/.config/vesktop/themes/ghost-matugen.css`
+(for Vencord on its own: its themes folder), enable the theme under Settings →
+Themes, and in Ghost's settings pick **Accent → From matugen** and/or turn on
+**Colours from matugen**:
+
+```css
+/**
+ * @name Ghost matugen
+ * @description Wallpaper colours for the Ghost plugin, written by matugen.
+ */
+:root {
+  --matugen-primary: {{colors.primary.default.hex}};
+  --matugen-surface: {{colors.surface.default.hex}};
+  --matugen-background: {{colors.primary_container.default.hex}};
+}
+```
+
+| Variable | Ghost uses it for |
+| --- | --- |
+| `--matugen-primary` | the accent (buttons, links, mentions…) |
+| `--matugen-surface` | the panels, menus and settings |
+| `--matugen-background` | the background while nothing plays (dimmed like the cover) |
+
+Vencord reloads theme files when they change, so a new wallpaper recolours Discord
+live. Without the file, Ghost falls back to your own colours. The OLED style keeps
+panels black.
+
+To line Ghost up with Hyprland's look, set **Corner radius** to your `rounding`
+and **Gap** to the gap you see between two windows (`gaps_in` on each side, so
+twice `gaps_in`).
+
+Album art and SpotifyControls use Discord's Spotify connection, not the local
+Spotify app, so they work on Linux too and don't touch MPRIS: a shell's media
+widget keeps working alongside. Vesktop sends notifications through the desktop's
+notification server like any app.
 
 ## Discord's Terms of Service
 
